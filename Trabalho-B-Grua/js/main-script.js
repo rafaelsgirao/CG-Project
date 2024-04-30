@@ -67,7 +67,15 @@ function render() {
 ////////////////////////////////
 function init() {
     'use strict';
+    renderer = new THREE.WebGLRenderer({
+        antialias: true
+    });
 
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    createScene();
+    createCamera();
 }
 
 /////////////////////
