@@ -10,14 +10,18 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 var scene, renderer, currentCamera = 0;
 var cameras = new Array();
 
-const baseLength = 15, baseHeight = 10, baseWidth = baseLength;
-const towerLength = 5, towerHeight = 70, towerWidth = towerLength;
-const cabinLength = 8, cabinHeight = towerLength, cabinWidth = towerLength; // 
-const jibLength = 75, jibHeight = 5, jibWidth = towerWidth;
-const counterjibLength = 30, counterjibHeight = jibHeight, counterjibWidth = jibWidth;
-const apexLength = towerLength, apexHeight = 15, apexWidth = apexLength;
-const weightLength = 8, weightHeight = 5, weightWidth = towerWidth;
-const pendentRadius = 2;
+const baseLength = 15, baseHeight = 10, baseWidth = baseLength;                         // base
+const towerLength = 5, towerHeight = 70, towerWidth = towerLength;                      // torre
+const cabinLength = 8, cabinHeight = towerLength, cabinWidth = towerLength;             // cabine 
+const jibLength = 75, jibHeight = 5, jibWidth = towerWidth;                             // lanca
+const counterjibLength = 30, counterjibHeight = jibHeight, counterjibWidth = jibWidth;  // contra-lanca
+const apexLength = towerLength, apexHeight = 15, apexWidth = apexLength;                // porta-lanca
+const weightLength = 8, weightHeight = 5, weightWidth = towerWidth;                     // contra-peso
+const pendentRadius = 1;                                                                // tirante
+const trolleyLength = 5, trolleyHeight = 5, trolleyWidth = jibWidth/2;                  // carrinho
+const cableRadius = 1; var cableLength = 10;                                            // cabo
+const blockLength = 5, blockHeight = blockLength, blockWidth = blockLength;             // bloco da garra
+const clawLength = 5, clawHeight = 3, clawWidth = 3;                                    // garra
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -112,12 +116,16 @@ function createUpperSection(parent, x, y, z){
     'use strict';
 
     var upperSection = new THREE.Object3D();
+
     createCabin(upperSection, (cabinLength - towerLength)/2, cabinHeight/2, 0);
     createApex(upperSection, 0, (apexHeight/2) + cabinHeight, 0);
-    createJib(upperSection, apexLength/2 + jibLength/2, cabinHeight + jibHeight/2, 0)
-    createCounterJib(upperSection, - apexLength/2 - counterjibLength/2, cabinHeight + counterjibHeight/2, 0)
-    createCounterWeight(upperSection, weightLength/2 - counterjibLength, cabinHeight, 0)
-    createForePendant(upperSection, 0, cabinHeight + jibHeight, 0)
+    createJib(upperSection, apexLength/2 + jibLength/2, cabinHeight + jibHeight/2, 0);
+    createCounterJib(upperSection, - apexLength/2 - counterjibLength/2, cabinHeight + counterjibHeight/2, 0);
+    createCounterWeight(upperSection, weightLength/2 - counterjibLength, cabinHeight, 0);
+    //createForePendant(upperSection, 0, cabinHeight + jibHeight, 0);
+    //createRearPendant(upperSection, 0, cabinHeight + jibHeight, 0);
+    createFrontSection(upperSection, 15, cabinHeight, 0);
+    
     upperSection.position.set(x, y, z);
     parent.add(upperSection);
 }
@@ -128,9 +136,9 @@ function createCabin(parent, x, y, z) {
 
     var geometry = new THREE.BoxGeometry(cabinLength, cabinHeight, cabinWidth);
     var material = new THREE.MeshBasicMaterial({ color: (0,0,0), wireframe: true});
-    var mesh = new THREE.Mesh(geometry, material)
-    mesh.position.set(x, y, z)
-    parent.add(mesh)
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
 }
 
 // Porta-Lanca
@@ -139,9 +147,9 @@ function createApex(parent, x, y, z) {
 
     var geometry = new THREE.BoxGeometry(apexLength, apexHeight, apexWidth);
     var material = new THREE.MeshBasicMaterial({ color: (0,0,0), wireframe: true});
-    var mesh = new THREE.Mesh(geometry, material)
-    mesh.position.set(x, y, z)
-    parent.add(mesh)
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
 }
 
 // Lanca
@@ -149,60 +157,98 @@ function createJib(parent, x, y, z) {
     'use strict';
 
     var geometry = new THREE.BoxGeometry(jibLength, jibHeight, jibWidth);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true})
-    var mesh = new THREE.Mesh(geometry, material)
-    mesh.position.set(x, y, z)
-    parent.add(mesh)
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
 }
 
 //Contra-lanca
 function createCounterJib(parent, x, y, z) {
-    'use strict'
+    'use strict';
     
     var geometry = new THREE.BoxGeometry(counterjibLength, counterjibHeight, counterjibWidth);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true})
-    var mesh = new THREE.Mesh(geometry, material)
-    mesh.position.set(x, y, z)
-    parent.add(mesh)
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
 }
 
 
 // Contra-peso
 function createCounterWeight(parent, x, y, z) {
-    'use strict'
+    'use strict';
     
     var geometry = new THREE.BoxGeometry(weightLength, weightHeight, weightWidth);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true})
-    var mesh = new THREE.Mesh(geometry, material)
-    mesh.position.set(x, y, z)
-    parent.add(mesh)
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
 }
 
 //Tirante de tras
 function createRearPendant(parent, x, y, z) {
-    'use strict'
+    'use strict';
     
     var geometry = new THREE.CylinderGeometry(pendentRadius, pendentRadius);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true})
-    var mesh = new THREE.Mesh(geometry, material)
-    mesh.position.set(x , y, z)
-    parent.add(mesh)
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x , y, z);
+    parent.add(mesh);
 }
 
 //Tirante da frente
 function createForePendant(parent, x, y, z) {
-    'use strict'
+    'use strict';
     
     var geometry = new THREE.CylinderGeometry(pendentRadius, pendentRadius);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true})
-    var mesh = new THREE.Mesh(geometry, material)
-    mesh.position.set(x, y, z)
-    parent.add(mesh)
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
 }
 
 //--------------------------------------------------------------------------------------
 // FRONT SECTION ///////////////////////////////////////////
 function createFrontSection(parent, x, y, z) {
+    'use strict';
+
+    var frontSection = new THREE.Object3D();
+
+    createTrolley(frontSection, 0, 0, 0);
+    createCable(frontSection, 0, 0, 0);
+    createClawSection(frontSection, 0, -cableLength, 0);
+
+    frontSection.position.set(x, y, z);
+    parent.add(frontSection);
+}
+
+function createTrolley(parent, x, y, z) {
+    'use strict';
+
+    var geometry = new THREE.BoxGeometry(trolleyLength, trolleyHeight, trolleyWidth);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x,y,z);
+    parent.add(mesh);
+}
+
+function createCable(parent, x, y, z) {
+    'use strict';
+
+    var geometry = new THREE.CylinderGeometry(cableRadius, cableRadius, cableLength, 10);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.translateY(cableLength/2);
+    mesh.position.set(x,y,z);
+    mesh.position.y -= cableLength/2;
+    parent.add(mesh);
+}
+
+//--------------------------------------------------------------------------------------
+// CLAW SECTION ///////////////////////////////////////////
+function createClawSection(parent, x, y, z) {
+    var clawSection = new THREE.Object3D();
 }
 
 
