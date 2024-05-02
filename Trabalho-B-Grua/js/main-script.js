@@ -10,6 +10,15 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 var scene, renderer, currentCamera = 0;
 var cameras = new Array();
 
+const baseLength = 15, baseHeight = 10, baseWidth = baseLength;
+const towerLength = 5, towerHeight = 70, towerWidth = towerLength;
+const cabinLength = 8, cabinHeight = towerLength, cabinWidth = towerLength; // 
+const jibLength = 75, jibHeight = 5, jibWidth = towerWidth;
+const counterjibLength = 30, counterjibHeight = jibHeight, counterjibWidth = jibWidth;
+const apexLength = towerLength, apexHeight = 15, apexWidth = apexLength;
+const weightLength = 8, weightHeight = 5, weightWidth = towerWidth;
+const pendentRadius = 2;
+
 /////////////////////
 /* CREATE SCENE(S) */
 /////////////////////
@@ -27,16 +36,36 @@ function createScene(){
 
 function createCameras(){
     'use strict';
-    var camera = new THREE.PerspectiveCamera(70,
+    
+    // Camera 1
+    var cam1 = new THREE.PerspectiveCamera(70,
                                          window.innerWidth / window.innerHeight,
                                          1,
                                          1000);
-    camera.position.x = 50;
-    camera.position.y = 50;
-    camera.position.z = 50;
-    camera.lookAt(scene.position);
+    cam1.position.x = 120;
+    cam1.position.y = 110;
+    cam1.position.z = 100;
+    cam1.lookAt(scene.position);
 
-    cameras.push(camera);
+    cameras.push(cam1);
+
+    const frontCamera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 100);
+    frontCamera.position.set(0, 0, 80);
+    frontCamera.lookAt(scene.position);
+
+    cameras.push(frontCamera);
+    
+    const sideCamera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 1000);
+    sideCamera.position.set(100, 0, 0);
+    sideCamera.lookAt(scene.position);
+
+    cameras.push(sideCamera);
+
+    const topCamera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 1000);
+    topCamera.position.set(0, 100, 0);
+    topCamera.lookAt(scene.position);
+
+    cameras.push(topCamera);
 }
 
 /////////////////////
@@ -46,21 +75,23 @@ function createCameras(){
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
+
+// LOWER SECTION --------------------------------------------------------------------------------------
 function createCrane(){
     'use strict';
 
     var crane = new THREE.Object3D();
 
-    createBase(crane, 0, 10, 0);
-    createTower(crane, 0, 30, 0);
-    createUpperSection(crane, 0, 0, 0);
+    createBase(crane, 0, baseHeight/2, 0);
+    createTower(crane, 0, baseHeight + towerHeight/2, 0);
+    createUpperSection(crane, 0, baseHeight + towerHeight, 0);
     scene.add(crane);
 }
 
 function createBase(parent, x, y, z){
     'use strict';
 
-    var geometry = new THREE.BoxGeometry(10, 10, 10);
+    var geometry = new THREE.BoxGeometry(baseLength, baseHeight, baseWidth);
     var mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({color: (0,0,0), wireframe: true}));
     mesh.position.set(x, y, z);
     parent.add(mesh);
@@ -69,28 +100,111 @@ function createBase(parent, x, y, z){
 function createTower(parent, x, y, z){
     'use strict';
 
-    var geometry = new THREE.BoxGeometry(8, 40, 8);
+    var geometry = new THREE.BoxGeometry(towerLength, towerHeight, towerWidth);
     var mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({color: (0,0,0), wireframe: true}));
     mesh.position.set(x, y, z);
     parent.add(mesh);
 }
+//--------------------------------------------------------------------------------------------------------
 
+// UPPER SECTION -----------------------------------------------------------------------------------------
 function createUpperSection(parent, x, y, z){
     'use strict';
 
     var upperSection = new THREE.Object3D();
-/*
-    createCabin(upperSection);          // Cabine
-    createApex(upperSection);           // Porta-lança
-    createJib(upperSection);            // Lança
-    createCounterjib(upperSection);     // Contra-lança
-    createCounterweight(upperSection);  // Contra-peso
-    createRearPendant(upperSection);    // Tirante de trás
-    createForePendant(upperSection);    // Tirante da frente
-    createAOutraParteComAsCoisasQueMexem(parent)
-*/
+    createCabin(upperSection, (cabinLength - towerLength)/2, cabinHeight/2, 0);
+    createApex(upperSection, 0, (apexHeight/2) + cabinHeight, 0);
+    createJib(upperSection, apexLength/2 + jibLength/2, cabinHeight + jibHeight/2, 0)
+    createCounterJib(upperSection, - apexLength/2 - counterjibLength/2, cabinHeight + counterjibHeight/2, 0)
+    createCounterWeight(upperSection, weightLength/2 - counterjibLength, cabinHeight, 0)
+    createForePendant(upperSection, 0, cabinHeight + jibHeight, 0)
+    upperSection.position.set(x, y, z);
     parent.add(upperSection);
 }
+
+// Cabine
+function createCabin(parent, x, y, z) {
+    'use strict';
+
+    var geometry = new THREE.BoxGeometry(cabinLength, cabinHeight, cabinWidth);
+    var material = new THREE.MeshBasicMaterial({ color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material)
+    mesh.position.set(x, y, z)
+    parent.add(mesh)
+}
+
+// Porta-Lanca
+function createApex(parent, x, y, z) {
+    'use strict';
+
+    var geometry = new THREE.BoxGeometry(apexLength, apexHeight, apexWidth);
+    var material = new THREE.MeshBasicMaterial({ color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material)
+    mesh.position.set(x, y, z)
+    parent.add(mesh)
+}
+
+// Lanca
+function createJib(parent, x, y, z) {
+    'use strict';
+
+    var geometry = new THREE.BoxGeometry(jibLength, jibHeight, jibWidth);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true})
+    var mesh = new THREE.Mesh(geometry, material)
+    mesh.position.set(x, y, z)
+    parent.add(mesh)
+}
+
+//Contra-lanca
+function createCounterJib(parent, x, y, z) {
+    'use strict'
+    
+    var geometry = new THREE.BoxGeometry(counterjibLength, counterjibHeight, counterjibWidth);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true})
+    var mesh = new THREE.Mesh(geometry, material)
+    mesh.position.set(x, y, z)
+    parent.add(mesh)
+}
+
+
+// Contra-peso
+function createCounterWeight(parent, x, y, z) {
+    'use strict'
+    
+    var geometry = new THREE.BoxGeometry(weightLength, weightHeight, weightWidth);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true})
+    var mesh = new THREE.Mesh(geometry, material)
+    mesh.position.set(x, y, z)
+    parent.add(mesh)
+}
+
+//Tirante de tras
+function createRearPendant(parent, x, y, z) {
+    'use strict'
+    
+    var geometry = new THREE.CylinderGeometry(pendentRadius, pendentRadius);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true})
+    var mesh = new THREE.Mesh(geometry, material)
+    mesh.position.set(x , y, z)
+    parent.add(mesh)
+}
+
+//Tirante da frente
+function createForePendant(parent, x, y, z) {
+    'use strict'
+    
+    var geometry = new THREE.CylinderGeometry(pendentRadius, pendentRadius);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true})
+    var mesh = new THREE.Mesh(geometry, material)
+    mesh.position.set(x, y, z)
+    parent.add(mesh)
+}
+
+//--------------------------------------------------------------------------------------
+// FRONT SECTION ///////////////////////////////////////////
+function createFrontSection(parent, x, y, z) {
+}
+
 
 //////////////////////
 /* CHECK COLLISIONS */
@@ -140,6 +254,8 @@ function init() {
     createCameras();
 
     window.addEventListener("resize", onResize);
+    window.addEventListener("keydown", onKeyDown);
+
 }
 
 /////////////////////
@@ -149,8 +265,10 @@ function animate() {
     'use strict';
 
     render();
-
+  
     requestAnimationFrame(animate);
+    renderer.render(scene, cameras[currentCamera]);
+
 }
 
 ////////////////////////////
@@ -159,19 +277,31 @@ function animate() {
 function onResize() { 
     'use strict';
     renderer.setSize(window.innerWidth, window.innerHeight);
-
     if (window.innerHeight > 0 && window.innerWidth > 0) {
         cameras[currentCamera].aspect = window.innerWidth / window.innerHeight;
         cameras[currentCamera].updateProjectionMatrix();
     }
-
 }
 
 ///////////////////////
 /* KEY DOWN CALLBACK */
 ///////////////////////
-function onKeyDown(e) {
+function onKeyDown(event) {
     'use strict';
+    switch (event.key) {
+        case '1':
+            currentCamera = 0;
+            break;
+        case '2':
+            currentCamera = 1;
+            break;
+        case '3':
+            currentCamera = 2;
+            break;
+        default:
+            // Do nothing if other keys are pressed
+            return;
+    }
 
 }
 
