@@ -21,7 +21,7 @@ const pendentRadius = 1;                                                        
 const trolleyLength = 5, trolleyHeight = 5, trolleyWidth = jibWidth/2;                  // carrinho
 const cableRadius = 1; var cableLength = 10;                                            // cabo
 const blockLength = 5, blockHeight = blockLength, blockWidth = blockLength;             // bloco da garra
-const clawLength = 5, clawHeight = 3, clawWidth = 3;                                    // garra
+const clawLength = 8, clawHeight = 3, clawWidth = 3;                                    // garra
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -122,8 +122,8 @@ function createUpperSection(parent, x, y, z){
     createJib(upperSection, apexLength/2 + jibLength/2, cabinHeight + jibHeight/2, 0);
     createCounterJib(upperSection, - apexLength/2 - counterjibLength/2, cabinHeight + counterjibHeight/2, 0);
     createCounterWeight(upperSection, weightLength/2 - counterjibLength, cabinHeight, 0);
-    //createForePendant(upperSection, 0, cabinHeight + jibHeight, 0);
-    //createRearPendant(upperSection, 0, cabinHeight + jibHeight, 0);
+    createPendant(upperSection, 0, cabinHeight + apexHeight, 0, -apexLength/2 - counterjibLength * 0.66, cabinHeight + jibHeight, 0); // Tirante traseiro
+    createPendant(upperSection, 0, cabinHeight + apexHeight, 0, apexLength/2 + jibLength * 0.66, cabinHeight + jibHeight, 0, true); // Tirante dianteiro
     createFrontSection(upperSection, 15, cabinHeight, 0);
     
     upperSection.position.set(x, y, z);
@@ -137,6 +137,7 @@ function createCabin(parent, x, y, z) {
     var geometry = new THREE.BoxGeometry(cabinLength, cabinHeight, cabinWidth);
     var material = new THREE.MeshBasicMaterial({ color: (0,0,0), wireframe: true});
     var mesh = new THREE.Mesh(geometry, material);
+    
     mesh.position.set(x, y, z);
     parent.add(mesh);
 }
@@ -163,7 +164,7 @@ function createJib(parent, x, y, z) {
     parent.add(mesh);
 }
 
-//Contra-lanca
+// Contra-lanca
 function createCounterJib(parent, x, y, z) {
     'use strict';
     
@@ -173,7 +174,6 @@ function createCounterJib(parent, x, y, z) {
     mesh.position.set(x, y, z);
     parent.add(mesh);
 }
-
 
 // Contra-peso
 function createCounterWeight(parent, x, y, z) {
@@ -186,25 +186,21 @@ function createCounterWeight(parent, x, y, z) {
     parent.add(mesh);
 }
 
-//Tirante de tras
-function createRearPendant(parent, x, y, z) {
+// Tirante
+function createPendant(parent, x1, y1, z1, x2, y2, z2, isFront) {
     'use strict';
-    
-    var geometry = new THREE.CylinderGeometry(pendentRadius, pendentRadius);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
-    var mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x , y, z);
-    parent.add(mesh);
-}
+    var hip = Math.sqrt(Math.pow(x1-x2, 2) + Math.pow(y1-y2, 2));
+    var angle = Math.atan(Math.abs(y2-y1)/Math.abs(x2-x1)) + Math.PI/2;
 
-//Tirante da frente
-function createForePendant(parent, x, y, z) {
-    'use strict';
-    
-    var geometry = new THREE.CylinderGeometry(pendentRadius, pendentRadius);
+    var geometry = new THREE.CylinderGeometry(pendentRadius, pendentRadius, hip, 10);
     var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
     var mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y, z);
+    
+    if(isFront) angle = -angle;
+
+    mesh.rotateZ(angle);
+    mesh.position.set((x1+x2)/2,(y1+y2)/2,(z1+z2)/2);
+
     parent.add(mesh);
 }
 
@@ -217,12 +213,13 @@ function createFrontSection(parent, x, y, z) {
 
     createTrolley(frontSection, 0, 0, 0);
     createCable(frontSection, 0, 0, 0);
-    createClawSection(frontSection, 0, -cableLength, 0);
+    createClawSection(frontSection, 0, -cableLength - blockHeight, 0);
 
     frontSection.position.set(x, y, z);
     parent.add(frontSection);
 }
 
+// Carrinho
 function createTrolley(parent, x, y, z) {
     'use strict';
 
@@ -233,22 +230,110 @@ function createTrolley(parent, x, y, z) {
     parent.add(mesh);
 }
 
+// Cabo
 function createCable(parent, x, y, z) {
     'use strict';
 
     var geometry = new THREE.CylinderGeometry(cableRadius, cableRadius, cableLength, 10);
     var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
     var mesh = new THREE.Mesh(geometry, material);
-    mesh.translateY(cableLength/2);
+    
     mesh.position.set(x,y,z);
-    mesh.position.y -= cableLength/2;
+
+    mesh.translateY(-cableLength/2); // alinhar topo do cilindro com a origem do referencial
+
     parent.add(mesh);
 }
 
 //--------------------------------------------------------------------------------------
 // CLAW SECTION ///////////////////////////////////////////
 function createClawSection(parent, x, y, z) {
+    'use strict';
+
     var clawSection = new THREE.Object3D();
+
+    createBlock(clawSection, 0, blockHeight/2, 0);
+    createClaw(clawSection, 0, 0, 0, 0);            // frente
+    createClaw(clawSection, 0, 0, 0, Math.PI/2);    // esquerda
+    createClaw(clawSection, 0, 0, 0, Math.PI);      // tras
+    createClaw(clawSection, 0, 0, 0, Math.PI*1.5);  // direita
+
+    clawSection.position.set(x,y,z);
+    parent.add(clawSection);
+}
+
+// Bloco da garra
+function createBlock(parent, x, y, z) {
+    'use strict';
+
+    var geometry = new THREE.BoxGeometry(blockLength, blockHeight, blockWidth);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
+}
+
+// Dedo da garra
+function createClaw(parent, x, y, z, rad) {
+    'use strict';
+
+    var geometry = new CustomTetrahedronGeometry();
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+    
+    mesh.scale.set(clawLength,clawHeight,clawWidth);
+    mesh.rotateY(rad);
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
+}
+
+//////////////////////
+/*CUSTOM TETRAHEDRON*/
+//////////////////////
+function CustomTetrahedronGeometry() {
+    const vertices = [
+        // vertical
+        { pos: [0,   0,  0.5], norm: [-1,0,0], uv: [0, 0]},
+        { pos: [0,   0, -0.5], norm: [-1,0,0], uv: [1, 0]},
+        { pos: [0,   1,    0], norm: [-1,0,0], uv: [1, 1]},
+        //horizontal
+        { pos: [0, 0,  0.5], norm: [0,-1,0], uv: [0, 1]},
+        { pos: [0, 0, -0.5], norm: [0,-1,0], uv: [1, 0]},
+        { pos: [1, 0,    0], norm: [0,-1,0], uv: [1, 1]},
+        //diagonal 1
+        { pos: [0, 1,    0], norm: [0.5,0.5,-1], uv: [0, 1]},
+        { pos: [1, 0,    0], norm: [0.5,0.5,-1], uv: [1, 0]},
+        { pos: [0, 0, -0.5], norm: [0.5,0.5,-1], uv: [1, 1]},
+        //diagonal 2
+        { pos: [0, 1,    0], norm: [-0.5,-0.5,-1], uv: [0, 1]},
+        { pos: [1, 0,    0], norm: [-0.5,-0.5,-1], uv: [1, 0]},
+        { pos: [0, 0,  0.5], norm: [-0.5,-0.5,-1], uv: [1, 1]},
+    ];
+
+    const positions = [];
+    const normals = [];
+    const uvs = [];
+    for (const vertex of vertices) {
+        positions.push(...vertex.pos);
+        normals.push(...vertex.norm);
+        uvs.push(...vertex.uv);
+    }
+
+    var geometry = new THREE.BufferGeometry();
+    const positionNumComponents = 3;
+    const normalNumComponents = 3;
+    const uvNumComponents = 2;
+    geometry.setAttribute(
+        'position', 
+        new THREE.BufferAttribute(new Float32Array(positions), positionNumComponents));
+    geometry.setAttribute(
+        'normal', 
+        new THREE.BufferAttribute(new Float32Array(normals), normalNumComponents));
+    geometry.setAttribute(
+        'uv', 
+        new THREE.BufferAttribute(new Float32Array(uvs), uvNumComponents));
+    return geometry;
 }
 
 
