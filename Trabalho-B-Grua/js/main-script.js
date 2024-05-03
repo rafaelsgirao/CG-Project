@@ -19,7 +19,7 @@ const apexLength = towerLength, apexHeight = 15, apexWidth = apexLength;        
 const weightLength = 8, weightHeight = 5, weightWidth = towerWidth;                     // contra-peso
 const pendentRadius = 1;                                                                // tirante
 const trolleyLength = 5, trolleyHeight = 5, trolleyWidth = jibWidth/2;                  // carrinho
-const cableRadius = 1; var cableLength = 10;                                            // cabo
+const cableRadius = 1, cableLength = 10;                                                // cabo
 const blockLength = 5, blockHeight = blockLength, blockWidth = blockLength;             // bloco da garra
 const clawLength = 8, clawHeight = 3, clawWidth = 3;                                    // garra
 
@@ -414,6 +414,49 @@ function onResize() {
     }
 }
 
+function rotateUpperSection(direction) {
+    'use strict'
+
+    var upperSection = scene.children[1].children[2];
+    upperSection.rotation.y += direction * Math.PI/180;
+}
+
+function moveTrolley(direction) {
+    'use strict'
+
+    var frontSection = scene.children[1].children[2].children[7];
+    var jib = scene.children[1].children[2].children[2];
+
+    if (frontSection.position.x + direction*0.5 <= jib.position.x + jibLength/2 - trolleyLength/2  && // dont move past jib
+        frontSection.position.x + direction*0.5 >= jib.position.x - jibLength/2 + cabinLength/2 + trolleyLength/2) // dont move inside cabin
+            frontSection.translateX(direction*0.5);
+}
+
+function moveClaw(direction) {
+    'use strict'
+
+    var cable = scene.children[1].children[2].children[7].children[1];
+    var claw = scene.children[1].children[2].children[7].children[2];
+    
+    var frontSectionHeight = scene.children[1].children[2].children[7].position.y;
+    var upperSectionHeight = scene.children[1].children[2].position.y;
+
+    //calculate the claw height based on the origin referencial
+    var clawReferencialHeight = claw.position.y + frontSectionHeight + upperSectionHeight;
+    var origin = scene.children[0];
+    var originalClawHeight = 0 -cableLength - blockHeight;  // claw original height
+
+    var length = cable.geometry.parameters.height * cable.scale['y'];
+    var scaleMatrix = new THREE.Matrix4().makeScale(1, (length - direction*0.5)/length , 1);
+
+    if (clawReferencialHeight - clawLength + direction*0.5 >= origin.position.y && // dont move past ground
+        claw.position.y + direction*0.5 <= originalClawHeight) { // dont move past original position
+                cable.applyMatrix4(scaleMatrix);
+                claw.translateY(direction*0.5);
+        }
+    
+}
+
 ///////////////////////
 /* KEY DOWN CALLBACK */
 ///////////////////////
@@ -429,6 +472,30 @@ function onKeyDown(event) {
         case '3':
             currentCamera = 2;
             break;
+        case 'ArrowLeft': // left arrow
+            rotateUpperSection(-1);
+            break;
+        
+        case 'ArrowRight': // right arrow
+            rotateUpperSection(1);
+            break;
+
+        case 'ArrowUp': // up arrow
+            moveTrolley(1);
+            break;
+
+        case 'ArrowDown': // down arrow
+            moveTrolley(-1);
+            break;
+
+        case ' ':
+            moveClaw(-1);
+            break;
+        
+        case 'Shift':
+            moveClaw(1);
+            break;
+            
         default:
             // Do nothing if other keys are pressed
             return;
@@ -444,4 +511,9 @@ function onKeyUp(e){
 }
 
 init();
+var cable = scene.children[1].children[2].children[7].children[1];
+var claw = scene.children[1].children[2].children[7].children[2];
+
+cable.add(new THREE.AxesHelper(10));
+claw.add(new THREE.AxesHelper(10));
 animate();
