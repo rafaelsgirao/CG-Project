@@ -10,6 +10,11 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 var scene, renderer, currentCamera = 0;
 var cameras = new Array();
 
+var keyDownMap = new Map(); // criado porque event.repeat no keydown não parece funcionar
+
+var moveClawDirection = 0, moveTrolleyDirection = 0, rotateCraneDirection = 0;
+
+// Crane constants
 const baseLength = 15, baseHeight = 10, baseWidth = baseLength;                         // base
 const towerLength = 5, towerHeight = 70, towerWidth = towerLength;                      // torre
 const cabinLength = 8, cabinHeight = towerLength, cabinWidth = towerLength;             // cabine 
@@ -23,6 +28,11 @@ const cableRadius = 1, cableLength = 10;                                        
 const blockLength = 5, blockHeight = blockLength, blockWidth = blockLength;             // bloco da garra
 const clawLength = 8, clawHeight = 3, clawWidth = 3;                                    // garra
 
+// Other objects constants
+const containerBaseLength = 1.5*(2*clawLength+blockLength), containerBaseWidth = 2.5*(2*clawLength+blockLength);
+const containerWallHeight = 1*(2*clawLength+blockLength), containerWallThickness = 3, 
+containerWallLength = containerBaseLength, containerWallWidth = containerBaseWidth - 2 * containerWallThickness;
+
 /////////////////////
 /* CREATE SCENE(S) */
 /////////////////////
@@ -32,6 +42,8 @@ function createScene(){
     scene.add(new THREE.AxesHelper(10));
     scene.background = new THREE.Color(0xE3D8B7);
     createCrane();
+    createContainer();
+    createLoads();
 }
 
 //////////////////////
@@ -288,6 +300,130 @@ function createClaw(parent, x, y, z, rad) {
     parent.add(mesh);
 }
 
+//--------------------------------------------------------------------------------------
+// CONTAINER ///////////////////////////////////////////
+function createContainer() {
+    'use strict';
+
+    var container = new THREE.Object3D();
+    
+    createContainerBase(container, 0, containerWallThickness/2, 0);
+    var wallY = containerWallThickness + containerWallHeight/2;
+    createContainerWall(container, 0, wallY, containerBaseWidth/2);
+    createContainerWall(container, 0, wallY, -containerBaseWidth/2);
+    createContainerWall(container, containerBaseLength/2, wallY, 0, true);
+    createContainerWall(container, -containerBaseLength/2, wallY, 0, true);
+
+    container.rotateY(Math.PI);
+    container.position.set(3.5/5 * jibLength, 0, 0);
+    scene.add(container);
+}
+
+function createContainerBase(parent, x, y, z) {
+    'use strict';
+
+    var geometry = new THREE.BoxGeometry(containerBaseLength, containerWallThickness, containerBaseWidth);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
+}
+
+function createContainerWall(parent, x, y, z, isWidth) {
+    'use strict';
+
+    var size = containerBaseLength;
+    if (isWidth) size = containerBaseWidth;
+
+    var geometry = new THREE.BoxGeometry(size, containerWallHeight, containerWallThickness);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+
+    if (isWidth) mesh.rotateY(Math.PI/2);
+
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
+}
+
+//--------------------------------------------------------------------------------------
+// LOADS ///////////////////////////////////////////
+
+function createLoads() {
+    'use strict';
+
+    createCubeLoad(scene, -41, 4, -20);
+    createDodecahedronLoad(scene, 24, 2, 42);
+    createIcosahedronLoad(scene, -10, 2.5,45);
+    createTorusLoad(scene, -34, 3, 30);
+    createKnotLoad(scene, -17, 4, -50);
+}
+
+function createCubeLoad(parent, x, y, z) {
+    'use strict';
+
+    var size = y*2;
+
+    var geometry = new THREE.BoxGeometry(size, size, size);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
+}
+
+function createDodecahedronLoad(parent, x, y, z) {
+    'use strict';
+
+    var size = y*2;
+
+    var geometry = new THREE.DodecahedronGeometry(size);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
+}
+
+function createIcosahedronLoad(parent, x, y, z) {
+    'use strict';
+
+    var size = y*2;
+
+    var geometry = new THREE.IcosahedronGeometry(size);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
+}
+
+function createTorusLoad(parent, x, y, z) {
+    'use strict';
+
+    var size = y*2;
+
+    var geometry = new THREE.TorusGeometry(size, size/3);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
+}
+
+function createKnotLoad(parent, x, y, z) {
+    'use strict';
+
+    var size = y*2;
+
+    var geometry = new THREE.TorusKnotGeometry(size, size/3);
+    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
+}
+
 //////////////////////
 /*CUSTOM TETRAHEDRON*/
 //////////////////////
@@ -386,7 +522,7 @@ function init() {
 
     window.addEventListener("resize", onResize);
     window.addEventListener("keydown", onKeyDown);
-
+    window.addEventListener("keyup", onKeyUp);
 }
 
 /////////////////////
@@ -394,6 +530,10 @@ function init() {
 /////////////////////
 function animate() {
     'use strict';
+
+    rotateCrane(rotateCraneDirection);
+    moveTrolley(moveTrolleyDirection);
+    moveClaw(moveClawDirection);
 
     render();
   
@@ -414,7 +554,7 @@ function onResize() {
     }
 }
 
-function rotateUpperSection(direction) {
+function rotateCrane(direction) {
     'use strict'
 
     var upperSection = scene.children[1].children[2];
@@ -462,6 +602,12 @@ function moveClaw(direction) {
 ///////////////////////
 function onKeyDown(event) {
     'use strict';
+
+    /*Este evento para movimentar a grua só devia ser lido no primeiro instante em que a tecla vai para baixo,
+    mas como manter a tecla em baixo faz com que se repita o input, o evento seria, normalmente, repetido
+    por isso criei o keyDownMap, um mapa que guarda se cada tecla está em baixo
+    event.repeat deveria dar esta informação, mas nos meus testes dava sempre valor false*/
+
     switch (event.key) {
         case '1':
             currentCamera = 0;
@@ -472,48 +618,112 @@ function onKeyDown(event) {
         case '3':
             currentCamera = 2;
             break;
-        case 'ArrowLeft': // left arrow
-            rotateUpperSection(-1);
+        
+        case 'Q':
+        case 'q': // Q
+            if (!keyDownMap.get('q')) {
+                rotateCraneDirection += 1;
+                keyDownMap.set('q', true)
+            }
             break;
         
-        case 'ArrowRight': // right arrow
-            rotateUpperSection(1);
+        case 'A':
+        case 'a': // A
+            if (!keyDownMap.get('a')) {
+                rotateCraneDirection -= 1;
+                keyDownMap.set('a', true)
+            }
             break;
 
-        case 'ArrowUp': // up arrow
-            moveTrolley(1);
+        case 'W':
+        case 'w': // W
+            if (!keyDownMap.get('w')) {
+                moveTrolleyDirection += 1;
+                keyDownMap.set('w', true)
+            }
             break;
 
-        case 'ArrowDown': // down arrow
-            moveTrolley(-1);
+        case 'S':
+        case 's': // S
+            if (!keyDownMap.get('s')) {
+                moveTrolleyDirection -= 1;
+                keyDownMap.set('s', true)
+            }
             break;
 
-        case ' ':
-            moveClaw(-1);
+        case 'E':
+        case 'e':
+            if (!keyDownMap.get('e')) {
+                moveClawDirection += 1;
+                keyDownMap.set('e', true)
+            }
             break;
         
-        case 'Shift':
-            moveClaw(1);
+        case 'D':
+        case 'd':
+            if (!keyDownMap.get('d')) {
+                moveClawDirection -= 1;
+                keyDownMap.set('d', true)
+            }
             break;
             
         default:
             // Do nothing if other keys are pressed
             return;
     }
-
 }
 
 ///////////////////////
 /* KEY UP CALLBACK */
 ///////////////////////
-function onKeyUp(e){
+function onKeyUp(event) {
     'use strict';
+
+    switch (event.key) {        
+        case 'Q':
+        case 'q': // Q
+            rotateCraneDirection += -1;
+            keyDownMap.set('q', false);
+            break;
+        
+        case 'A':
+        case 'a': // A
+            rotateCraneDirection -= -1;
+            keyDownMap.set('a', false);
+            break;
+
+        case 'W':
+        case 'w': // W
+            moveTrolleyDirection += -1;
+            keyDownMap.set('w', false);
+            break;
+
+        case 'S':
+        case 's': // S
+            moveTrolleyDirection -= -1;
+            keyDownMap.set('s', false);
+            break;
+
+        case 'E':
+        case 'e': // E
+            moveClawDirection += -1;
+            keyDownMap.set('e', false);
+            break;
+        
+        case 'D':
+        case 'd': // D
+            moveClawDirection -= -1;
+            keyDownMap.set('d', false);
+            break;
+            
+        default:
+            // Do nothing if other keys are pressed
+            return;
+    }
 }
 
 init();
 var cable = scene.children[1].children[2].children[7].children[1];
 var claw = scene.children[1].children[2].children[7].children[2];
 
-cable.add(new THREE.AxesHelper(10));
-claw.add(new THREE.AxesHelper(10));
 animate();
