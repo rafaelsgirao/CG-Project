@@ -12,7 +12,7 @@ var cameras = new Array();
 
 var keyDownMap = new Map(); // criado porque event.repeat no keydown não parece funcionar
 
-var moveClawDirection = 0, moveTrolleyDirection = 0, rotateCraneDirection = 0;
+var moveRopeDirection = 0, moveTrolleyDirection = 0, rotateCraneDirection = 0, moveClawDirection = 0;
 
 // Crane constants
 const baseLength = 15, baseHeight = 10, baseWidth = baseLength;                         // base
@@ -533,6 +533,7 @@ function animate() {
 
     rotateCrane(rotateCraneDirection);
     moveTrolley(moveTrolleyDirection);
+    moveRope(moveRopeDirection);
     moveClaw(moveClawDirection);
 
     render();
@@ -542,18 +543,9 @@ function animate() {
 
 }
 
-////////////////////////////
-/* RESIZE WINDOW CALLBACK */
-////////////////////////////
-function onResize() { 
-    'use strict';
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    if (window.innerHeight > 0 && window.innerWidth > 0) {
-        cameras[currentCamera].aspect = window.innerWidth / window.innerHeight;
-        cameras[currentCamera].updateProjectionMatrix();
-    }
-}
-
+/////////////////////
+/* MOVEMENTS        */
+/////////////////////
 function rotateCrane(direction) {
     'use strict'
 
@@ -572,7 +564,7 @@ function moveTrolley(direction) {
             frontSection.translateX(direction*0.5);
 }
 
-function moveClaw(direction) {
+function moveRope(direction) {
     'use strict'
 
     var cable = scene.children[1].children[2].children[7].children[1];
@@ -595,6 +587,35 @@ function moveClaw(direction) {
                 claw.translateY(direction*0.5);
         }
     
+}
+
+function moveClaw(direction) {
+    'use strict'
+
+    var frontClaw = scene.children[1].children[2].children[7].children[2].children[1];
+    var leftClaw = scene.children[1].children[2].children[7].children[2].children[2];
+    var backClaw = scene.children[1].children[2].children[7].children[2].children[3];
+    var rightClaw = scene.children[1].children[2].children[7].children[2].children[4];
+
+    if (frontClaw.rotation.z - direction * Math.PI/180 <= 0 &&
+        frontClaw.rotation.z - direction * Math.PI/180 >= -Math.PI/2) {
+            frontClaw.rotation.z -= direction * Math.PI/180;
+            backClaw.rotation.z -= direction * Math.PI/180;
+            leftClaw.rotation.x -= direction * Math.PI/180;
+            rightClaw.rotation.x += direction * Math.PI/180;
+    }
+}
+
+////////////////////////////
+/* RESIZE WINDOW CALLBACK */
+////////////////////////////
+function onResize() { 
+    'use strict';
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    if (window.innerHeight > 0 && window.innerWidth > 0) {
+        cameras[currentCamera].aspect = window.innerWidth / window.innerHeight;
+        cameras[currentCamera].updateProjectionMatrix();
+    }
 }
 
 ///////////////////////
@@ -654,7 +675,7 @@ function onKeyDown(event) {
         case 'E':
         case 'e':
             if (!keyDownMap.get('e')) {
-                moveClawDirection += 1;
+                moveRopeDirection += 1;
                 keyDownMap.set('e', true)
             }
             break;
@@ -662,8 +683,24 @@ function onKeyDown(event) {
         case 'D':
         case 'd':
             if (!keyDownMap.get('d')) {
-                moveClawDirection -= 1;
+                moveRopeDirection -= 1;
                 keyDownMap.set('d', true)
+            }
+            break;
+
+        case 'R':
+        case 'r':
+            if (!keyDownMap.get('r')) {
+                moveClawDirection += 1;
+                keyDownMap.set('r', true);
+            }
+            break;
+
+        case 'F':
+        case 'f':
+            if (!keyDownMap.get('f')) {
+                moveClawDirection -= 1;
+                keyDownMap.set('f', true);
             }
             break;
             
@@ -706,14 +743,26 @@ function onKeyUp(event) {
 
         case 'E':
         case 'e': // E
-            moveClawDirection += -1;
+            moveRopeDirection += -1;
             keyDownMap.set('e', false);
             break;
         
         case 'D':
         case 'd': // D
-            moveClawDirection -= -1;
+            moveRopeDirection -= -1;
             keyDownMap.set('d', false);
+            break;
+        
+        case 'R':
+        case 'r': // R
+            moveClawDirection += -1;
+            keyDownMap.set('r', false);
+            break;
+
+        case 'F':
+        case 'f': // F
+            moveClawDirection -= -1;
+            keyDownMap.set('f', false);
             break;
             
         default:
@@ -723,7 +772,4 @@ function onKeyUp(event) {
 }
 
 init();
-var cable = scene.children[1].children[2].children[7].children[1];
-var claw = scene.children[1].children[2].children[7].children[2];
-
 animate();
