@@ -95,14 +95,13 @@ export const createCamClaw = (parent, cameras, x, y, z) => {
     45,
     window.innerWidth / window.innerHeight,
     1,
-    100
+    1000
   );
 
-  camClaw.position.set(x, y - 5, z);
+  camClaw.position.set(x, y , z);
 
-  //TODO: verificar se a orientacao desta camara esta alinhada com a lança da grua.
-  camClaw.lookAt(x, 0, z); //TODO: check this.
-  camClaw.rotation.y += Math.PI / 2; //TODO: check this!!!
+  camClaw.lookAt(x, -1000, z); 
+  camClaw.rotation.z -= Math.PI / 2;
   cameras[5] = camClaw;
   parent.add(camClaw);
 };
