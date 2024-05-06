@@ -19,7 +19,7 @@ export function createCameras(cameras, scene_position) {
     1,
     1000
   );
-  camFrontal.position.set(-100, 0, 0);
+  camFrontal.position.set(120, 0, 0);
   camFrontal.lookAt(scene_position);
 
   cameras[0] = camFrontal;
@@ -33,7 +33,7 @@ export function createCameras(cameras, scene_position) {
     1,
     1000
   );
-  camLateral.position.set(120, 0, 0);
+  camLateral.position.set(0, 0, 120);
   camLateral.lookAt(scene_position);
 
   cameras[1] = camLateral;
@@ -47,7 +47,7 @@ export function createCameras(cameras, scene_position) {
     1,
     1000
   );
-  camTopo.position.set(0, 100, 0);
+  camTopo.position.set(0, 200, 0);
   camTopo.lookAt(scene_position);
 
   cameras[2] = camTopo;

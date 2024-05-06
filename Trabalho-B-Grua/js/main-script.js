@@ -308,7 +308,7 @@ function createContainer() {
 function createContainerBase(parent, x, y, z) {
     'use strict';
 
-    var geometry = new THREE.BoxGeometry(containerBaseLength, containerWallThickness, containerBaseWidth);
+    var geometry = new THREE.BoxGeometry(containerBaseLength-0.1, containerWallThickness, containerBaseWidth-0.1); // -0.1 para impedir conflitos de cor na sobreposição com as laterais
     var material = new THREE.MeshBasicMaterial( {color: containerBaseColour, wireframe: false});
     materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
