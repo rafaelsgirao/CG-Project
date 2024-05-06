@@ -3,12 +3,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import * as Stats from 'three/addons/libs/stats.module.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+import { createCamClaw, createCameras } from "./cameras.js";
 
 //////////////////////
 /* GLOBAL VARIABLES */
 //////////////////////
 var scene, renderer, currentCamera = 0;
-var cameras = new Array();
+var cameras = new Array(6);
 
 var keyDownMap = new Map(); // criado porque event.repeat no keydown não parece funcionar
 
@@ -46,43 +47,6 @@ function createScene(){
     createLoads();
 }
 
-//////////////////////
-/* CREATE CAMERA(S) */
-//////////////////////
-
-function createCameras(){
-    'use strict';
-    
-    // Camera 1
-    var cam1 = new THREE.PerspectiveCamera(70,
-                                         window.innerWidth / window.innerHeight,
-                                         1,
-                                         1000);
-    cam1.position.x = 120;
-    cam1.position.y = 110;
-    cam1.position.z = 100;
-    cam1.lookAt(scene.position);
-
-    cameras.push(cam1);
-
-    const frontCamera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 100);
-    frontCamera.position.set(0, 0, 80);
-    frontCamera.lookAt(scene.position);
-
-    cameras.push(frontCamera);
-    
-    const sideCamera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 1000);
-    sideCamera.position.set(100, 0, 0);
-    sideCamera.lookAt(scene.position);
-
-    cameras.push(sideCamera);
-
-    const topCamera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 1000);
-    topCamera.position.set(0, 100, 0);
-    topCamera.lookAt(scene.position);
-
-    cameras.push(topCamera);
-}
 
 /////////////////////
 /* CREATE LIGHT(S) */
@@ -270,6 +234,7 @@ function createClawSection(parent, x, y, z) {
     createClaw(clawSection, 0, 0, 0, Math.PI);      // tras
     createClaw(clawSection, 0, 0, 0, Math.PI*1.5);  // direita
 
+    createCamClaw(clawSection, cameras, 0, 0, 0);
     clawSection.position.set(x,y,z);
     parent.add(clawSection);
 }
@@ -518,7 +483,7 @@ function init() {
     document.body.appendChild(renderer.domElement);
 
     createScene();
-    createCameras();
+    createCameras(cameras, scene.position);
 
     window.addEventListener("resize", onResize);
     window.addEventListener("keydown", onKeyDown);
@@ -630,15 +595,24 @@ function onKeyDown(event) {
     event.repeat deveria dar esta informação, mas nos meus testes dava sempre valor false*/
 
     switch (event.key) {
-        case '1':
-            currentCamera = 0;
-            break;
-        case '2':
-            currentCamera = 1;
-            break;
-        case '3':
-            currentCamera = 2;
-            break;
+        case "1":
+          currentCamera = 0;
+          break;
+        case "2":
+          currentCamera = 1;
+          break;
+        case "3":
+          currentCamera = 2;
+          break;
+        case "4":
+          currentCamera = 3;
+          break;
+        case "5":
+          currentCamera = 4;
+          break;
+        case "6":
+          currentCamera = 5;
+          break;
         
         case 'Q':
         case 'q': // Q
