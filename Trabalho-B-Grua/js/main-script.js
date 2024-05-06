@@ -10,6 +10,7 @@ import { createCamClaw, createCameras } from "./cameras.js";
 //////////////////////
 var scene, renderer, currentCamera = 0;
 var cameras = new Array(6);
+var materials = new Array();
 
 var keyDownMap = new Map(); // criado porque event.repeat no keydown não parece funcionar
 
@@ -22,12 +23,18 @@ const cabinLength = 8, cabinHeight = towerLength, cabinWidth = towerLength;     
 const jibLength = 75, jibHeight = 5, jibWidth = towerWidth;                             // lanca
 const counterjibLength = 30, counterjibHeight = jibHeight, counterjibWidth = jibWidth;  // contra-lanca
 const apexLength = towerLength, apexHeight = 15, apexWidth = apexLength;                // porta-lanca
-const weightLength = 8, weightHeight = 5, weightWidth = towerWidth;                     // contra-peso
+const weightLength = 8, weightHeight = 5, weightWidth = towerWidth+0.1;                 // contra-peso
 const pendentRadius = 1;                                                                // tirante
 const trolleyLength = 5, trolleyHeight = 5, trolleyWidth = jibWidth/2;                  // carrinho
 const cableRadius = 1, cableLength = 10;                                                // cabo
 const blockLength = 5, blockHeight = blockLength, blockWidth = blockLength;             // bloco da garra
 const clawLength = 8, clawHeight = 3, clawWidth = 3;                                    // garra
+
+// Colour constants
+const craneColour = 0xd4af37, cabinColour = 0x628db2, 
+    metalColour = 0x9e8e8e, darkMetalColour = 0x5e4e4e,
+    containerColour = 0x4682b4, containerBaseColour = 0x151e3d,
+    loadColour1 = 0x5c2107, loadColour2 = 0x64731e;
 
 // Other objects constants
 const containerBaseLength = 1.5*(2*clawLength+blockLength), containerBaseWidth = 2.5*(2*clawLength+blockLength);
@@ -40,7 +47,7 @@ containerWallLength = containerBaseLength, containerWallWidth = containerBaseWid
 function createScene(){
     'use strict';
     scene = new THREE.Scene();
-    scene.add(new THREE.AxesHelper(10));
+    scene.add(new THREE.AxesHelper(0));
     scene.background = new THREE.Color(0xE3D8B7);
     createCrane();
     createContainer();
@@ -72,7 +79,9 @@ function createBase(parent, x, y, z){
     'use strict';
 
     var geometry = new THREE.BoxGeometry(baseLength, baseHeight, baseWidth);
-    var mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({color: (0,0,0), wireframe: true}));
+    var material = new THREE.MeshBasicMaterial({color: darkMetalColour, wireframe: false});
+    materials.push(material);
+    var mesh = new THREE.Mesh(geometry,material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
 }
@@ -81,7 +90,9 @@ function createTower(parent, x, y, z){
     'use strict';
 
     var geometry = new THREE.BoxGeometry(towerLength, towerHeight, towerWidth);
-    var mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({color: (0,0,0), wireframe: true}));
+    var material = new THREE.MeshBasicMaterial({color: craneColour, wireframe: false});
+    materials.push(material);
+    var mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
 }
@@ -111,7 +122,8 @@ function createCabin(parent, x, y, z) {
     'use strict';
 
     var geometry = new THREE.BoxGeometry(cabinLength, cabinHeight, cabinWidth);
-    var material = new THREE.MeshBasicMaterial({ color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial({color: cabinColour, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
     
     mesh.position.set(x, y, z);
@@ -123,7 +135,8 @@ function createApex(parent, x, y, z) {
     'use strict';
 
     var geometry = new THREE.BoxGeometry(apexLength, apexHeight, apexWidth);
-    var material = new THREE.MeshBasicMaterial({ color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial({ color: craneColour, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
@@ -134,7 +147,8 @@ function createJib(parent, x, y, z) {
     'use strict';
 
     var geometry = new THREE.BoxGeometry(jibLength, jibHeight, jibWidth);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: craneColour, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
@@ -145,7 +159,8 @@ function createCounterJib(parent, x, y, z) {
     'use strict';
     
     var geometry = new THREE.BoxGeometry(counterjibLength, counterjibHeight, counterjibWidth);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: craneColour, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
@@ -156,7 +171,8 @@ function createCounterWeight(parent, x, y, z) {
     'use strict';
     
     var geometry = new THREE.BoxGeometry(weightLength, weightHeight, weightWidth);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: darkMetalColour, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
@@ -169,7 +185,8 @@ function createPendant(parent, x1, y1, z1, x2, y2, z2, isFront) {
     var angle = Math.atan(Math.abs(y2-y1)/Math.abs(x2-x1)) + Math.PI/2;
 
     var geometry = new THREE.CylinderGeometry(pendentRadius, pendentRadius, hip, 10);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: metalColour, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
     
     if(isFront) angle = -angle;
@@ -200,7 +217,8 @@ function createTrolley(parent, x, y, z) {
     'use strict';
 
     var geometry = new THREE.BoxGeometry(trolleyLength, trolleyHeight, trolleyWidth);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: darkMetalColour, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x,y,z);
     parent.add(mesh);
@@ -211,7 +229,8 @@ function createCable(parent, x, y, z) {
     'use strict';
 
     var geometry = new THREE.CylinderGeometry(cableRadius, cableRadius, cableLength, 10);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: metalColour, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
     
     mesh.position.set(x,y,z);
@@ -244,7 +263,8 @@ function createBlock(parent, x, y, z) {
     'use strict';
 
     var geometry = new THREE.BoxGeometry(blockLength, blockHeight, blockWidth);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: darkMetalColour, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
@@ -256,7 +276,8 @@ function createClaw(parent, x, y, z, rad) {
     'use strict';
 
     var geometry = new CustomTetrahedronGeometry();
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: metalColour, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
     
     mesh.scale.set(clawLength,clawHeight,clawWidth);
@@ -273,11 +294,11 @@ function createContainer() {
     var container = new THREE.Object3D();
     
     createContainerBase(container, 0, containerWallThickness/2, 0);
-    var wallY = containerWallThickness + containerWallHeight/2;
+    var wallY = containerWallHeight/2;
     createContainerWall(container, 0, wallY, containerBaseWidth/2);
     createContainerWall(container, 0, wallY, -containerBaseWidth/2);
-    createContainerWall(container, containerBaseLength/2, wallY, 0, true);
-    createContainerWall(container, -containerBaseLength/2, wallY, 0, true);
+    createContainerWall(container, containerBaseLength/2-containerWallThickness/2, wallY, 0, true);
+    createContainerWall(container, -containerBaseLength/2+containerWallThickness/2, wallY, 0, true);
 
     container.rotateY(Math.PI);
     container.position.set(3.5/5 * jibLength, 0, 0);
@@ -288,7 +309,8 @@ function createContainerBase(parent, x, y, z) {
     'use strict';
 
     var geometry = new THREE.BoxGeometry(containerBaseLength, containerWallThickness, containerBaseWidth);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: containerBaseColour, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
@@ -302,7 +324,8 @@ function createContainerWall(parent, x, y, z, isWidth) {
     if (isWidth) size = containerBaseWidth;
 
     var geometry = new THREE.BoxGeometry(size, containerWallHeight, containerWallThickness);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: containerColour, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
 
     if (isWidth) mesh.rotateY(Math.PI/2);
@@ -330,7 +353,8 @@ function createCubeLoad(parent, x, y, z) {
     var size = y*2;
 
     var geometry = new THREE.BoxGeometry(size, size, size);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: loadColour2, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
@@ -343,7 +367,8 @@ function createDodecahedronLoad(parent, x, y, z) {
     var size = y*2;
 
     var geometry = new THREE.DodecahedronGeometry(size);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: loadColour2, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
@@ -356,7 +381,8 @@ function createIcosahedronLoad(parent, x, y, z) {
     var size = y*2;
 
     var geometry = new THREE.IcosahedronGeometry(size);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: loadColour1, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
@@ -369,7 +395,8 @@ function createTorusLoad(parent, x, y, z) {
     var size = y*2;
 
     var geometry = new THREE.TorusGeometry(size, size/3);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: loadColour2, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
@@ -382,7 +409,8 @@ function createKnotLoad(parent, x, y, z) {
     var size = y*2;
 
     var geometry = new THREE.TorusKnotGeometry(size, size/3);
-    var material = new THREE.MeshBasicMaterial( {color: (0,0,0), wireframe: true});
+    var material = new THREE.MeshBasicMaterial( {color: loadColour1, wireframe: false});
+    materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
@@ -408,8 +436,8 @@ function CustomTetrahedronGeometry() {
         { pos: [0, 0, -0.5], norm: [0.5,0.5,-1], uv: [1, 1]},
         //diagonal 2
         { pos: [0, 1,    0], norm: [-0.5,-0.5,-1], uv: [0, 1]},
-        { pos: [1, 0,    0], norm: [-0.5,-0.5,-1], uv: [1, 0]},
         { pos: [0, 0,  0.5], norm: [-0.5,-0.5,-1], uv: [1, 1]},
+        { pos: [1, 0,    0], norm: [-0.5,-0.5,-1], uv: [1, 0]},
     ];
 
     const positions = [];
@@ -460,6 +488,10 @@ function handleCollisions(){
 function update(){
     'use strict';
 
+    rotateCrane(rotateCraneDirection);
+    moveTrolley(moveTrolleyDirection);
+    moveRope(moveRopeDirection);
+    moveClaw(moveClawDirection);
 }
 
 /////////////
@@ -496,10 +528,7 @@ function init() {
 function animate() {
     'use strict';
 
-    rotateCrane(rotateCraneDirection);
-    moveTrolley(moveTrolleyDirection);
-    moveRope(moveRopeDirection);
-    moveClaw(moveClawDirection);
+    update();
 
     render();
   
@@ -572,6 +601,16 @@ function moveClaw(direction) {
 }
 
 ////////////////////////////
+/*    WIREFRAME TOGGLE    */
+////////////////////////////
+
+function toggleWireframe() {
+    materials.forEach(element => {
+        element.wireframe = !element.wireframe;
+    });
+}
+
+////////////////////////////
 /* RESIZE WINDOW CALLBACK */
 ////////////////////////////
 function onResize() { 
@@ -595,6 +634,9 @@ function onKeyDown(event) {
     event.repeat deveria dar esta informação, mas nos meus testes dava sempre valor false*/
 
     switch (event.key) {
+        case " ":
+            toggleWireframe();
+            break;
         case "1":
           currentCamera = 0;
           break;
