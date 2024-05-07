@@ -504,6 +504,8 @@ function CustomTetrahedronGeometry() {
 function checkCollisions(){
     'use strict';
     
+    if (colliding != null) return;
+
     var claw = components.get("clawSection");
 
     loads.every(load => {
@@ -524,20 +526,116 @@ function checkCollisions(){
 function handleCollisions(delta){
     'use strict';
     
+    const period = Math.PI * 2; // rotation period, use to compare angles above a full rotation (e.g. have 450 degrees == 90 degrees)
+    function mod(n, d) {return ((n%d)+d)%d} // n%d in js can be negative, this is always positive
+
     switch(animationStage) {
         case 0: // move claws to slightly open position (to open or close, depending on position)
-            claw = components.get("frontClaw");    
+            var claw = components.get("frontClaw");    
+            const desiredAngle = -Math.PI/10; // angle for the claws to be at before object snapping
 
-            var direction = -Math.PI/3 - claw.rotation.z;
+            var direction = claw.rotation.z > desiredAngle ? 1 : -1; // check if it needs to open or close to achive 60 degrees
 
-            //moveClaw(, delta);
+            moveClaw(direction, delta);
 
-            if (claw.rotation.z <= -Math.PI/3) {
+            // check if this movement brought the claw to/ surpassed the desired angle
+            if (direction*claw.rotation.z <= direction*desiredAngle) { // times direction to check if the angle was surpassed taking the movement direction into account
+                animationStage += 1;
+            }
+            break;
+        
+        case 1: // snap object to claw            
+            var clawSection = components.get("clawSection");
+
+            clawSection.add(colliding);
+
+            var newY = -colliding.position.y;
+            colliding.position.set(0,newY,0);
+
+            animationStage += 1;
+            break;
+        
+        case 2: // close claws
+            var claw = components.get("frontClaw"); 
+            const closedAngle = -Math.PI/4; // angle for the claws to close at
+            moveClaw(1, delta);
+
+            // check if this movement brought the claw to/ surpassed the desired angle
+            if (claw.rotation.z <= closedAngle) {
+                animationStage += 1;
+            }
+            break;
+        
+        case 3: // pull cable up
+        case 9:
+            var cable = components.get("cable");
+            const desiredScaling = 1.02;
+
+            moveRope(1, delta);
+
+            if (cable.scale['y'] <= desiredScaling) {
                 animationStage += 1;
             }
             break;
 
-        default:
+        case 4: // rotate upper section
+            var upperSection = components.get("upperSection");
+
+            var direction = mod(upperSection.rotation.y, period) > period / 2 ? 1 : -1; // check which rotation is closest 
+
+            rotateCrane(direction, delta);
+
+            // check if this movement brought the claw to/ surpassed the desired angle
+            if (direction * mod(upperSection.rotation.y, period) < direction * period / 2 ) {
+                animationStage += 1;
+            }
+            break;
+
+        case 5: // move trolley
+            var frontSection = components.get("frontSection");
+            const desiredValue = 55;
+
+            var direction = frontSection.position.x < desiredValue ? 1 : -1;
+
+            moveTrolley(direction, delta);
+
+            if (direction * frontSection.position.x >= direction * desiredValue) {
+                animationStage +=1
+            }
+            break;
+
+        case 6: // pull cable down
+            var cable = components.get("cable");
+            const desiredScale = 7;
+
+            moveRope(-1, delta);
+
+            if (cable.scale['y'] >= desiredScale) {
+                animationStage += 1;
+            }
+            break;
+
+        case 7: // open claw
+            var claw = components.get("frontClaw"); 
+            const openedAngle = -Math.PI/10; // angle for the claws to open at
+            moveClaw(-1, delta);
+
+            // check if this movement brought the claw to/ surpassed the desired angle
+            if (claw.rotation.z >= openedAngle) {
+                animationStage += 1;
+            }
+            break;
+        
+        case 8: // decouple object from claw
+            
+            scene.add(colliding);
+            var oldY = -colliding.position.y;
+            colliding.position.set(0, oldY, 0);
+            colliding.applyMatrix4(colliding.matrixWorld);
+            animationStage += 1; // TODO
+            break;
+
+        default: // reset stage counter and colliding variable
             animationStage = 0;
             colliding = null;
     }
@@ -793,6 +891,10 @@ function onKeyDown(event) {
             }
             break;
             
+        case 'z': // TODO remove DEBUG
+            colliding = loads[3];
+            break;
+
         default:
             // Do nothing if other keys are pressed
             return;
