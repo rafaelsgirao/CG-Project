@@ -12,6 +12,11 @@ var scene, renderer, currentCamera = 0;
 var cameras = new Array(6);
 var materials = new Array();
 var loads = new Array();
+var animationStage = 0;
+
+const components = new Map();
+var colliding = null;
+
 var clock;
 
 var keyDownMap = new Map(); // criado porque event.repeat no keydown não parece funcionar
@@ -85,6 +90,7 @@ function createBase(parent, x, y, z){
     var mesh = new THREE.Mesh(geometry,material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
+    components.set('base', mesh);
 }
 
 function createTower(parent, x, y, z){
@@ -96,6 +102,7 @@ function createTower(parent, x, y, z){
     var mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
+    components.set('tower', mesh);
 }
 //--------------------------------------------------------------------------------------------------------
 
@@ -116,6 +123,7 @@ function createUpperSection(parent, x, y, z){
     
     upperSection.position.set(x, y, z);
     parent.add(upperSection);
+    components.set('upperSection', upperSection);
 }
 
 // Cabine
@@ -129,6 +137,7 @@ function createCabin(parent, x, y, z) {
     
     mesh.position.set(x, y, z);
     parent.add(mesh);
+    components.set('cabin', mesh);
 }
 
 // Porta-Lanca
@@ -141,6 +150,7 @@ function createApex(parent, x, y, z) {
     var mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
+    components.set('apex', mesh);
 }
 
 // Lanca
@@ -153,6 +163,7 @@ function createJib(parent, x, y, z) {
     var mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
+    components.set('jib', mesh);
 }
 
 // Contra-lanca
@@ -165,6 +176,7 @@ function createCounterJib(parent, x, y, z) {
     var mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
+    components.set('counterJib', mesh);
 }
 
 // Contra-peso
@@ -177,6 +189,7 @@ function createCounterWeight(parent, x, y, z) {
     var mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
+    components.set('counterWeight', mesh);
 }
 
 // Tirante
@@ -196,6 +209,7 @@ function createPendant(parent, x1, y1, z1, x2, y2, z2, isFront) {
     mesh.position.set((x1+x2)/2,(y1+y2)/2,(z1+z2)/2);
 
     parent.add(mesh);
+    components.set('pendant', mesh);
 }
 
 //--------------------------------------------------------------------------------------
@@ -211,6 +225,7 @@ function createFrontSection(parent, x, y, z) {
 
     frontSection.position.set(x, y, z);
     parent.add(frontSection);
+    components.set('frontSection', frontSection);
 }
 
 // Carrinho
@@ -223,6 +238,7 @@ function createTrolley(parent, x, y, z) {
     var mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x,y,z);
     parent.add(mesh);
+    components.set('trolley', mesh);
 }
 
 // Cabo
@@ -239,6 +255,7 @@ function createCable(parent, x, y, z) {
     mesh.translateY(-cableLength/2); // alinhar topo do cilindro com a origem do referencial
 
     parent.add(mesh);
+    components.set('cable', mesh);
 }
 
 //--------------------------------------------------------------------------------------
@@ -249,14 +266,15 @@ function createClawSection(parent, x, y, z) {
     var clawSection = new THREE.Object3D();
 
     createBlock(clawSection, 0, blockHeight/2, 0);
-    createClaw(clawSection, 0, 0, 0, 0);            // frente
-    createClaw(clawSection, 0, 0, 0, Math.PI/2);    // esquerda
-    createClaw(clawSection, 0, 0, 0, Math.PI);      // tras
-    createClaw(clawSection, 0, 0, 0, Math.PI*1.5);  // direita
+    createClaw(clawSection, 0, 0, 0, 0, "frontClaw");
+    createClaw(clawSection, 0, 0, 0, Math.PI/2, "leftClaw");
+    createClaw(clawSection, 0, 0, 0, Math.PI, "backClaw");
+    createClaw(clawSection, 0, 0, 0, Math.PI*1.5, "rightClaw");
 
     createCamClaw(clawSection, cameras, 0, 0, 0);
     clawSection.position.set(x,y,z);
     parent.add(clawSection);
+    components.set('clawSection', clawSection);
 }
 
 // Bloco da garra
@@ -270,10 +288,11 @@ function createBlock(parent, x, y, z) {
 
     mesh.position.set(x, y, z);
     parent.add(mesh);
+    components.set('block', mesh);
 }
 
 // Dedo da garra
-function createClaw(parent, x, y, z, rad) {
+function createClaw(parent, x, y, z, rad, name) {
     'use strict';
 
     var geometry = new CustomTetrahedronGeometry();
@@ -285,6 +304,7 @@ function createClaw(parent, x, y, z, rad) {
     mesh.rotateY(rad);
     mesh.position.set(x, y, z);
     parent.add(mesh);
+    components.set(name, mesh);
 }
 
 //--------------------------------------------------------------------------------------
@@ -304,6 +324,7 @@ function createContainer() {
     container.rotateY(Math.PI);
     container.position.set(3.5/5 * jibLength, 0, 0);
     scene.add(container);
+    components.set('container', container)
 }
 
 function createContainerBase(parent, x, y, z) {
@@ -316,6 +337,7 @@ function createContainerBase(parent, x, y, z) {
 
     mesh.position.set(x, y, z);
     parent.add(mesh);
+    components.set('containerBase', mesh);
 }
 
 function createContainerWall(parent, x, y, z, isWidth) {
@@ -333,6 +355,7 @@ function createContainerWall(parent, x, y, z, isWidth) {
 
     mesh.position.set(x, y, z);
     parent.add(mesh);
+    components.set('containerWall', mesh);
 }
 
 //--------------------------------------------------------------------------------------
@@ -404,7 +427,7 @@ function createTorusLoad(parent, x, y, z) {
     var mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
-    
+
     parent.add(mesh);
     loads.push(mesh);
 }
@@ -480,15 +503,44 @@ function CustomTetrahedronGeometry() {
 //////////////////////
 function checkCollisions(){
     'use strict';
+    
+    var claw = components.get("clawSection");
+
+    loads.every(load => {
+        if (
+            (l.radius + claw.radius)**2 >= (l.position.x - claw.position.x)**2 + (l.position.y - claw.position.y)**2 + (l.position.z - claw.position.z)**2
+        ) {
+            colliding = l;
+            return false;
+        }
+        return true;
+    });
 
 }
 
 ///////////////////////
 /* HANDLE COLLISIONS */
 ///////////////////////
-function handleCollisions(){
+function handleCollisions(delta){
     'use strict';
+    
+    switch(animationStage) {
+        case 0: // move claws to slightly open position (to open or close, depending on position)
+            claw = components.get("frontClaw");    
 
+            var direction = -Math.PI/3 - claw.rotation.z;
+
+            //moveClaw(, delta);
+
+            if (claw.rotation.z <= -Math.PI/3) {
+                animationStage += 1;
+            }
+            break;
+
+        default:
+            animationStage = 0;
+            colliding = null;
+    }
 }
 
 ////////////
@@ -498,10 +550,15 @@ function update(){
     'use strict';
 
     var delta = clock.getDelta();
-    rotateCrane(rotateCraneDirection, delta);
-    moveTrolley(moveTrolleyDirection, delta);
-    moveRope(moveRopeDirection, delta);
-    moveClaw(moveClawDirection, delta);
+
+    if(colliding == null) {
+        rotateCrane(rotateCraneDirection, delta);
+        moveTrolley(moveTrolleyDirection, delta);
+        moveRope(moveRopeDirection, delta);
+        moveClaw(moveClawDirection, delta);
+    } else {
+        handleCollisions(delta);
+    }
 }
 
 /////////////
@@ -555,7 +612,7 @@ function animate() {
 function rotateCrane(direction, delta) {
     'use strict'
 
-    var upperSection = scene.children[0].children[2];
+    var upperSection = components.get('upperSection');
     var rotation = direction * Math.PI/180 * delta / 0.015;
     upperSection.rotation.y += rotation;
 }
@@ -563,8 +620,8 @@ function rotateCrane(direction, delta) {
 function moveTrolley(direction, delta) {
     'use strict'
 
-    var frontSection = scene.children[0].children[2].children[7];
-    var jib = scene.children[0].children[2].children[2];
+    var frontSection = components.get('frontSection');
+    var jib = components.get('jib');
 
     var translation = direction * 0.5 * delta / 0.015;
 
@@ -577,19 +634,18 @@ function moveRope(direction, delta) {
     'use strict'
 
     var origin = scene.children[0];
-    var cable = scene.children[0].children[2].children[7].children[1];
-    var claw = scene.children[0].children[2].children[7].children[2];
-
-    //calculate the claw height based on the origin referencial
-    var frontSectionHeight = scene.children[0].children[2].children[7].position.y;
-    var upperSectionHeight = scene.children[0].children[2].position.y;
-    var clawReferencialHeight = claw.position.y + frontSectionHeight + upperSectionHeight;
-    var originalClawHeight = 0 -cableLength - blockHeight;  // claw original height
+    var cable = components.get('cable');
+    var claw = components.get('clawSection');
+    var frontSection = components.get('frontSection');
+    var upperSection = components.get('upperSection');
 
     var translation = direction * 0.5 * delta / 0.015;
-
     var length = cable.geometry.parameters.height * cable.scale['y'];
     var scaleMatrix = new THREE.Matrix4().makeScale(1, (length - translation)/length , 1);
+
+    //calculate the claw height based on the origin referencial
+    var clawReferencialHeight = claw.position.y + frontSection.position.y + upperSection.position.y;
+    var originalClawHeight = 0 - cableLength - blockHeight;  // claw original height
 
     if (clawReferencialHeight - clawLength + translation >= origin.position.y && // dont move past ground
         claw.position.y + translation <= originalClawHeight) { // dont move past original position
@@ -601,10 +657,10 @@ function moveRope(direction, delta) {
 function moveClaw(direction, delta) {
     'use strict'
 
-    var frontClaw = scene.children[0].children[2].children[7].children[2].children[1];
-    var leftClaw = scene.children[0].children[2].children[7].children[2].children[2];
-    var backClaw = scene.children[0].children[2].children[7].children[2].children[3];
-    var rightClaw = scene.children[0].children[2].children[7].children[2].children[4];
+    var frontClaw = components.get('frontClaw');
+    var leftClaw = components.get('leftClaw');
+    var backClaw = components.get('backClaw');
+    var rightClaw = components.get('rightClaw');
 
     var rotation = direction * Math.PI/180 * delta / 0.015;
 
