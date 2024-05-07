@@ -11,6 +11,7 @@ import { createCamClaw, createCameras } from "./cameras.js";
 var scene, renderer, currentCamera = 0;
 var cameras = new Array(6);
 var materials = new Array();
+var loads = new Array();
 var clock;
 
 var keyDownMap = new Map(); // criado porque event.repeat no keydown não parece funcionar
@@ -359,12 +360,13 @@ function createCubeLoad(parent, x, y, z) {
 
     mesh.position.set(x, y, z);
     parent.add(mesh);
+    loads.push(mesh);
 }
 
 function createDodecahedronLoad(parent, x, y, z) {
     'use strict';
 
-    var size = y*2;
+    var size = y;
 
     var geometry = new THREE.DodecahedronGeometry(size);
     var material = new THREE.MeshBasicMaterial( {color: loadColour2, wireframe: false});
@@ -373,12 +375,13 @@ function createDodecahedronLoad(parent, x, y, z) {
 
     mesh.position.set(x, y, z);
     parent.add(mesh);
+    loads.push(mesh);
 }
 
 function createIcosahedronLoad(parent, x, y, z) {
     'use strict';
 
-    var size = y*2;
+    var size = y;
 
     var geometry = new THREE.IcosahedronGeometry(size);
     var material = new THREE.MeshBasicMaterial( {color: loadColour1, wireframe: false});
@@ -387,12 +390,13 @@ function createIcosahedronLoad(parent, x, y, z) {
 
     mesh.position.set(x, y, z);
     parent.add(mesh);
+    loads.push(mesh);
 }
 
 function createTorusLoad(parent, x, y, z) {
     'use strict';
 
-    var size = y*2;
+    var size = y;
 
     var geometry = new THREE.TorusGeometry(size, size/3);
     var material = new THREE.MeshBasicMaterial( {color: loadColour2, wireframe: false});
@@ -400,21 +404,26 @@ function createTorusLoad(parent, x, y, z) {
     var mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
+    
     parent.add(mesh);
+    loads.push(mesh);
 }
 
 function createKnotLoad(parent, x, y, z) {
     'use strict';
 
-    var size = y*2;
+    var size = y;
 
     var geometry = new THREE.TorusKnotGeometry(size, size/3);
     var material = new THREE.MeshBasicMaterial( {color: loadColour1, wireframe: false});
     materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
 
+    mesh.rotateX(Math.PI/2);
     mesh.position.set(x, y, z);
+
     parent.add(mesh);
+    loads.push(mesh);
 }
 
 //////////////////////
