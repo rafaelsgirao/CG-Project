@@ -11,6 +11,7 @@ import { createCamClaw, createCameras } from "./cameras.js";
 var scene, renderer, currentCamera = 0;
 var cameras = new Array(6);
 var materials = new Array();
+var clock;
 
 var keyDownMap = new Map(); // criado porque event.repeat no keydown não parece funcionar
 
@@ -47,7 +48,6 @@ containerWallLength = containerBaseLength, containerWallWidth = containerBaseWid
 function createScene(){
     'use strict';
     scene = new THREE.Scene();
-    scene.add(new THREE.AxesHelper(0));
     scene.background = new THREE.Color(0xE3D8B7);
     createCrane();
     createContainer();
@@ -488,10 +488,11 @@ function handleCollisions(){
 function update(){
     'use strict';
 
-    rotateCrane(rotateCraneDirection);
-    moveTrolley(moveTrolleyDirection);
-    moveRope(moveRopeDirection);
-    moveClaw(moveClawDirection);
+    var delta = clock.getDelta();
+    rotateCrane(rotateCraneDirection, delta);
+    moveTrolley(moveTrolleyDirection, delta);
+    moveRope(moveRopeDirection, delta);
+    moveClaw(moveClawDirection, delta);
 }
 
 /////////////
@@ -513,6 +514,8 @@ function init() {
 
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+
+    clock = new THREE.Clock();
 
     createScene();
     createCameras(cameras, scene.position);
@@ -540,63 +543,68 @@ function animate() {
 /////////////////////
 /* MOVEMENTS        */
 /////////////////////
-function rotateCrane(direction) {
+function rotateCrane(direction, delta) {
     'use strict'
 
-    var upperSection = scene.children[1].children[2];
-    upperSection.rotation.y += direction * Math.PI/180;
+    var upperSection = scene.children[0].children[2];
+    var rotation = direction * Math.PI/180 * delta / 0.015;
+    upperSection.rotation.y += rotation;
 }
 
-function moveTrolley(direction) {
+function moveTrolley(direction, delta) {
     'use strict'
 
-    var frontSection = scene.children[1].children[2].children[7];
-    var jib = scene.children[1].children[2].children[2];
+    var frontSection = scene.children[0].children[2].children[7];
+    var jib = scene.children[0].children[2].children[2];
 
-    if (frontSection.position.x + direction*0.5 <= jib.position.x + jibLength/2 - trolleyLength/2  && // dont move past jib
-        frontSection.position.x + direction*0.5 >= jib.position.x - jibLength/2 + cabinLength/2 + trolleyLength/2) // dont move inside cabin
-            frontSection.translateX(direction*0.5);
+    var translation = direction * 0.5 * delta / 0.015;
+
+    if (frontSection.position.x + translation + 0.1 <= jib.position.x + jibLength/2 - trolleyLength/2  && // dont move past jib
+        frontSection.position.x + translation >= jib.position.x - jibLength/2 + cabinLength/2 + trolleyLength/2) // dont move inside cabin
+            frontSection.translateX(translation);
 }
 
-function moveRope(direction) {
+function moveRope(direction, delta) {
     'use strict'
 
-    var cable = scene.children[1].children[2].children[7].children[1];
-    var claw = scene.children[1].children[2].children[7].children[2];
-    
-    var frontSectionHeight = scene.children[1].children[2].children[7].position.y;
-    var upperSectionHeight = scene.children[1].children[2].position.y;
+    var origin = scene.children[0];
+    var cable = scene.children[0].children[2].children[7].children[1];
+    var claw = scene.children[0].children[2].children[7].children[2];
 
     //calculate the claw height based on the origin referencial
+    var frontSectionHeight = scene.children[0].children[2].children[7].position.y;
+    var upperSectionHeight = scene.children[0].children[2].position.y;
     var clawReferencialHeight = claw.position.y + frontSectionHeight + upperSectionHeight;
-    var origin = scene.children[0];
     var originalClawHeight = 0 -cableLength - blockHeight;  // claw original height
 
-    var length = cable.geometry.parameters.height * cable.scale['y'];
-    var scaleMatrix = new THREE.Matrix4().makeScale(1, (length - direction*0.5)/length , 1);
+    var translation = direction * 0.5 * delta / 0.015;
 
-    if (clawReferencialHeight - clawLength + direction*0.5 >= origin.position.y && // dont move past ground
-        claw.position.y + direction*0.5 <= originalClawHeight) { // dont move past original position
+    var length = cable.geometry.parameters.height * cable.scale['y'];
+    var scaleMatrix = new THREE.Matrix4().makeScale(1, (length - translation)/length , 1);
+
+    if (clawReferencialHeight - clawLength + translation >= origin.position.y && // dont move past ground
+        claw.position.y + translation <= originalClawHeight) { // dont move past original position
                 cable.applyMatrix4(scaleMatrix);
-                claw.translateY(direction*0.5);
+                claw.translateY(translation);
         }
-    
 }
 
-function moveClaw(direction) {
+function moveClaw(direction, delta) {
     'use strict'
 
-    var frontClaw = scene.children[1].children[2].children[7].children[2].children[1];
-    var leftClaw = scene.children[1].children[2].children[7].children[2].children[2];
-    var backClaw = scene.children[1].children[2].children[7].children[2].children[3];
-    var rightClaw = scene.children[1].children[2].children[7].children[2].children[4];
+    var frontClaw = scene.children[0].children[2].children[7].children[2].children[1];
+    var leftClaw = scene.children[0].children[2].children[7].children[2].children[2];
+    var backClaw = scene.children[0].children[2].children[7].children[2].children[3];
+    var rightClaw = scene.children[0].children[2].children[7].children[2].children[4];
 
-    if (frontClaw.rotation.z - direction * Math.PI/180 <= 0 &&
-        frontClaw.rotation.z - direction * Math.PI/180 >= -Math.PI/2) {
-            frontClaw.rotation.z -= direction * Math.PI/180;
-            backClaw.rotation.z -= direction * Math.PI/180;
-            leftClaw.rotation.x -= direction * Math.PI/180;
-            rightClaw.rotation.x += direction * Math.PI/180;
+    var rotation = direction * Math.PI/180 * delta / 0.015;
+
+    if (frontClaw.rotation.z - rotation <= 0 &&
+        frontClaw.rotation.z - rotation >= -Math.PI/2) {
+            frontClaw.rotation.z -= rotation;
+            backClaw.rotation.z -= rotation;
+            leftClaw.rotation.x -= rotation;
+            rightClaw.rotation.x += rotation;
     }
 }
 
