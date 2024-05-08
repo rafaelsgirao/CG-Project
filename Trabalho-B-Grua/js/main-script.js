@@ -754,7 +754,6 @@ function update(){
     'use strict';
 
     var delta = clock.getDelta();
-    
     checkCollisions();
 
     if(colliding == null) {
@@ -884,6 +883,7 @@ function moveClaw(direction, delta) {
 ////////////////////////////
 
 function toggleWireframe() {
+    document.getElementById("buttonWireframe")?.classList.toggle("active");
     materials.forEach(element => {
         element.wireframe = !element.wireframe;
     });
@@ -901,6 +901,25 @@ function onResize() {
     }
 }
 
+const enableHUDButton = (key) => {
+    key = key.toUpperCase();
+    document.getElementById(`button${key}`)?.classList.add("active");
+};
+
+const disableHUDButton = (key) => {
+    key = key.toUpperCase();
+    document.getElementById(`button${key}`)?.classList.remove("active");
+};
+
+const switchCamera = (n /* index of new camera */) => {
+    if (n == currentCamera) {
+        return;
+    }
+    disableHUDButton(`${currentCamera+1}`);
+    enableHUDButton(`${n+1}`);
+    currentCamera = n;
+
+};
 ///////////////////////
 /* KEY DOWN CALLBACK */
 ///////////////////////
@@ -915,24 +934,15 @@ function onKeyDown(event) {
     switch (event.key) {
         case " ":
             toggleWireframe();
+            enableHUDButton(event.key);
             break;
         case "1":
-          currentCamera = 0;
-          break;
         case "2":
-          currentCamera = 1;
-          break;
         case "3":
-          currentCamera = 2;
-          break;
         case "4":
-          currentCamera = 3;
-          break;
         case "5":
-          currentCamera = 4;
-          break;
         case "6":
-          currentCamera = 5;
+            switchCamera(parseInt(event.key) -1);
           break;
         
         case 'Q':
@@ -940,6 +950,7 @@ function onKeyDown(event) {
             if (!keyDownMap.get('q')) {
                 rotateCraneDirection += 1;
                 keyDownMap.set('q', true)
+                enableHUDButton(event.key);
             }
             break;
         
@@ -948,6 +959,7 @@ function onKeyDown(event) {
             if (!keyDownMap.get('a')) {
                 rotateCraneDirection -= 1;
                 keyDownMap.set('a', true)
+                enableHUDButton(event.key);
             }
             break;
 
@@ -956,6 +968,8 @@ function onKeyDown(event) {
             if (!keyDownMap.get('w')) {
                 moveTrolleyDirection += 1;
                 keyDownMap.set('w', true)
+                enableHUDButton(event.key);
+
             }
             break;
 
@@ -964,6 +978,7 @@ function onKeyDown(event) {
             if (!keyDownMap.get('s')) {
                 moveTrolleyDirection -= 1;
                 keyDownMap.set('s', true)
+                enableHUDButton(event.key);
             }
             break;
 
@@ -972,6 +987,8 @@ function onKeyDown(event) {
             if (!keyDownMap.get('e')) {
                 moveRopeDirection += 1;
                 keyDownMap.set('e', true)
+                enableHUDButton(event.key);
+
             }
             break;
         
@@ -980,6 +997,8 @@ function onKeyDown(event) {
             if (!keyDownMap.get('d')) {
                 moveRopeDirection -= 1;
                 keyDownMap.set('d', true)
+                enableHUDButton(event.key);
+
             }
             break;
 
@@ -988,6 +1007,8 @@ function onKeyDown(event) {
             if (!keyDownMap.get('r')) {
                 moveClawDirection += 1;
                 keyDownMap.set('r', true);
+                enableHUDButton(event.key);
+
             }
             break;
 
@@ -996,6 +1017,8 @@ function onKeyDown(event) {
             if (!keyDownMap.get('f')) {
                 moveClawDirection -= 1;
                 keyDownMap.set('f', true);
+                enableHUDButton(event.key);
+
             }
             break;
             
@@ -1020,48 +1043,56 @@ function onKeyUp(event) {
         case 'q': // Q
             rotateCraneDirection += -1;
             keyDownMap.set('q', false);
+            disableHUDButton(event.key);
             break;
         
         case 'A':
         case 'a': // A
             rotateCraneDirection -= -1;
             keyDownMap.set('a', false);
+            disableHUDButton(event.key);
             break;
 
         case 'W':
         case 'w': // W
             moveTrolleyDirection += -1;
             keyDownMap.set('w', false);
+            disableHUDButton(event.key);
             break;
 
         case 'S':
         case 's': // S
             moveTrolleyDirection -= -1;
             keyDownMap.set('s', false);
+            disableHUDButton(event.key);
             break;
 
         case 'E':
         case 'e': // E
             moveRopeDirection += -1;
             keyDownMap.set('e', false);
+            disableHUDButton(event.key);
             break;
         
         case 'D':
         case 'd': // D
             moveRopeDirection -= -1;
             keyDownMap.set('d', false);
+            disableHUDButton(event.key);
             break;
         
         case 'R':
         case 'r': // R
             moveClawDirection += -1;
             keyDownMap.set('r', false);
+            disableHUDButton(event.key);
             break;
 
         case 'F':
         case 'f': // F
             moveClawDirection -= -1;
             keyDownMap.set('f', false);
+            disableHUDButton(event.key);
             break;
             
         default:
