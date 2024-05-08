@@ -803,12 +803,9 @@ function animate() {
     'use strict';
 
     update();
-
     render();
   
     requestAnimationFrame(animate);
-    renderer.render(scene, cameras[currentCamera]);
-
 }
 
 /////////////////////
@@ -830,9 +827,18 @@ function moveTrolley(direction, delta) {
 
     var translation = direction * 0.5 * delta / 0.015;
 
-    if (frontSection.position.x + translation + 0.1 <= jib.position.x + jibLength/2 - trolleyLength/2  && // dont move past jib
-        frontSection.position.x + translation >= jib.position.x - jibLength/2 + cabinLength/2 + trolleyLength/2) // dont move inside cabin
-            frontSection.translateX(translation);
+    // dont move past jib
+    if (translation > 0 && frontSection.position.x + translation >= jib.position.x + jibLength/2 - trolleyLength/2 - 0.1) {
+        frontSection.position.x = jib.position.x + jibLength/2 - trolleyLength/2 - 0.1;
+        return;
+    }
+    // dont move inside cabin
+    if (translation < 0 && frontSection.position.x + translation <= jib.position.x - jibLength/2 + cabinLength/2 + trolleyLength/2) {
+        jib.position.x - jibLength/2 + cabinLength/2 + trolleyLength/2
+        return;
+    }
+    frontSection.translateX(translation);
+    return;
 }
 
 function moveRope(direction, delta) {
@@ -846,17 +852,31 @@ function moveRope(direction, delta) {
 
     var translation = direction * 0.5 * delta / 0.015;
     var length = cable.geometry.parameters.height * cable.scale['y'];
-    var scaleMatrix = new THREE.Matrix4().makeScale(1, (length - translation)/length , 1);
+    var missingHeight;
 
-    //calculate the claw height based on the origin referencial
-    var clawReferencialHeight = claw.position.y + frontSection.position.y + upperSection.position.y;
+    var clawReferencialHeight = claw.position.y + frontSection.position.y + upperSection.position.y; // claw height based on origin referencial
+
+    // dont move past ground
+    if (translation < 0 && clawReferencialHeight - clawLength + translation <= origin.position.y) {
+        missingHeight = origin.position.y - (clawReferencialHeight - clawLength);
+        cable.applyMatrix4(new THREE.Matrix4().makeScale(1, (length - missingHeight)/length, 1));
+        claw.translateY(missingHeight);
+        return;
+    }
+
     var originalClawHeight = 0 - cableLength - blockHeight;  // claw original height
 
-    if (clawReferencialHeight - clawLength + translation >= origin.position.y && // dont move past ground
-        claw.position.y + translation <= originalClawHeight) { // dont move past original position
-                cable.applyMatrix4(scaleMatrix);
-                claw.translateY(translation);
-        }
+    // dont move past original position
+    if (translation > 0 && claw.position.y + translation >= originalClawHeight) {
+        missingHeight = originalClawHeight - claw.position.y;
+        cable.applyMatrix4(new THREE.Matrix4().makeScale(1, (length - missingHeight)/length, 1));
+        claw.translateY(missingHeight);
+        return;
+    }
+
+    cable.applyMatrix4(new THREE.Matrix4().makeScale(1, (length - translation)/length, 1));
+    claw.translateY(translation);
+    return;
 }
 
 function moveClaw(direction, delta) {
@@ -869,13 +889,27 @@ function moveClaw(direction, delta) {
 
     var rotation = direction * Math.PI/180 * delta / 0.015;
 
-    if (frontClaw.rotation.z - rotation <= 0 &&
-        frontClaw.rotation.z - rotation >= -Math.PI/2) {
-            frontClaw.rotation.z -= rotation;
-            backClaw.rotation.z -= rotation;
-            leftClaw.rotation.x -= rotation;
-            rightClaw.rotation.x += rotation;
+    //dont open too much
+    if (rotation < 0 && frontClaw.rotation.z - rotation >= 0) {
+        frontClaw.rotation.z = 0;
+        backClaw.rotation.z = Math.PI;
+        leftClaw.rotation.x = 0;
+        rightClaw.rotation.x = 0;
+        return;
     }
+    //dont close too much
+    if (rotation > 0 && frontClaw.rotation.z - rotation <= -Math.PI/2) {
+        frontClaw.rotation.z = -Math.PI/2;
+        backClaw.rotation.z = Math.PI/2;
+        leftClaw.rotation.x = -Math.PI/2;
+        rightClaw.rotation.x = Math.PI/2;
+        return;
+    }
+    frontClaw.rotation.z -= rotation;
+    backClaw.rotation.z -= rotation;
+    leftClaw.rotation.x -= rotation;
+    rightClaw.rotation.x += rotation;
+    return;
 }
 
 ////////////////////////////
@@ -1002,8 +1036,8 @@ function onKeyDown(event) {
             }
             break;
 
-        case 'R':
-        case 'r':
+        case 'F':
+        case 'f':
             if (!keyDownMap.get('r')) {
                 moveClawDirection += 1;
                 keyDownMap.set('r', true);
@@ -1012,8 +1046,8 @@ function onKeyDown(event) {
             }
             break;
 
-        case 'F':
-        case 'f':
+        case 'R':
+        case 'r':
             if (!keyDownMap.get('f')) {
                 moveClawDirection -= 1;
                 keyDownMap.set('f', true);
@@ -1081,15 +1115,15 @@ function onKeyUp(event) {
             disableHUDButton(event.key);
             break;
         
-        case 'R':
-        case 'r': // R
+        case 'F':
+        case 'f': // F
             moveClawDirection += -1;
             keyDownMap.set('r', false);
             disableHUDButton(event.key);
             break;
 
-        case 'F':
-        case 'f': // F
+        case 'R':
+        case 'r': // R
             moveClawDirection -= -1;
             keyDownMap.set('f', false);
             disableHUDButton(event.key);
