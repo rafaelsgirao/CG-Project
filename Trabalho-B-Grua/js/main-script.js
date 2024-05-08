@@ -508,8 +508,8 @@ function checkCollisions(){
 
     var claw = components.get("clawSection");
 
-    loads.every(load => {
-        if (
+    loads.every(l => {
+        if ( // soma_dos_raios ^ 2 >= distância_entre_centros ^ 2
             (l.radius + claw.radius)**2 >= (l.position.x - claw.position.x)**2 + (l.position.y - claw.position.y)**2 + (l.position.z - claw.position.z)**2
         ) {
             colliding = l;
@@ -549,7 +549,7 @@ function handleCollisions(delta){
 
             clawSection.add(colliding);
 
-            var newY = -colliding.position.y;
+            var newY = -colliding.position.y; // TODO dar-lhe um valor baseado no raio do objeto
             colliding.position.set(0,newY,0);
 
             animationStage += 1;
@@ -572,7 +572,7 @@ function handleCollisions(delta){
             const desiredScaling = 1.02;
 
             moveRope(1, delta);
-
+            
             if (cable.scale['y'] <= desiredScaling) {
                 animationStage += 1;
             }
@@ -627,12 +627,12 @@ function handleCollisions(delta){
             break;
         
         case 8: // decouple object from claw
-            
             scene.add(colliding);
-            var oldY = -colliding.position.y;
-            colliding.position.set(0, oldY, 0);
+
+            colliding.position.set(0, 0, 0);
             colliding.applyMatrix4(colliding.matrixWorld);
-            animationStage += 1; // TODO
+            
+            animationStage += 1;
             break;
 
         default: // reset stage counter and colliding variable
@@ -648,6 +648,8 @@ function update(){
     'use strict';
 
     var delta = clock.getDelta();
+    
+    checkCollisions();
 
     if(colliding == null) {
         rotateCrane(rotateCraneDirection, delta);
