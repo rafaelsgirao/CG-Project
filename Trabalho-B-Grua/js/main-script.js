@@ -3,7 +3,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import * as Stats from 'three/addons/libs/stats.module.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-import { createCamClaw, createCameras } from "./cameras.js";
 
 //////////////////////
 /* GLOBAL VARIABLES */
@@ -42,6 +41,10 @@ const craneColour = 0xd4af37, cabinColour = 0x628db2,
     metalColour = 0x9e8e8e, darkMetalColour = 0x5e4e4e,
     containerColour = 0x4682b4, containerBaseColour = 0x151e3d,
     loadColour1 = 0x5c2107, loadColour2 = 0x64731e;
+
+// Camera constants
+const camRatio = 7;
+const fixedCamPoint = [100, 100, 120];
 
 // Other objects constants
 const containerBaseLength = 1.5*(2*clawLength+blockLength), containerBaseWidth = 2.5*(2*clawLength+blockLength);
@@ -519,6 +522,109 @@ function checkCollisions(){
     });
 
 }
+
+//////////////////////
+/* CREATE CAMERA(S) */
+//////////////////////
+
+ function createCameras(cameras, scene_position) {
+  "use strict";
+
+  // Câmara frontal (1).
+  const camFrontal = new THREE.OrthographicCamera(
+    window.innerWidth / -camRatio,
+    window.innerWidth / camRatio,
+    window.innerHeight / camRatio,
+    window.innerHeight / -camRatio,
+    1,
+    1000
+  );
+  camFrontal.position.set(120, 0, 0);
+  camFrontal.lookAt(scene_position);
+
+  cameras[0] = camFrontal;
+
+  // Câmara lateral (2).
+  const camLateral = new THREE.OrthographicCamera(
+    window.innerWidth / -camRatio,
+    window.innerWidth / camRatio,
+    window.innerHeight / camRatio,
+    window.innerHeight / -camRatio,
+    1,
+    1000
+  );
+  camLateral.position.set(0, 0, 120);
+  camLateral.lookAt(scene_position);
+
+  cameras[1] = camLateral;
+
+  // Câmara de topo (3).
+  const camTopo = new THREE.OrthographicCamera(
+    window.innerWidth / -camRatio,
+    window.innerWidth / camRatio,
+    window.innerHeight / camRatio,
+    window.innerHeight / -camRatio,
+    1,
+    1000
+  );
+  camTopo.position.set(0, 200, 0);
+  camTopo.lookAt(scene_position);
+
+  cameras[2] = camTopo;
+
+  // Câmara fixa: projeção ortogonal (4).
+  const camFixedOrthogonal = new THREE.OrthographicCamera(
+    window.innerWidth / -camRatio,
+    window.innerWidth / camRatio,
+    window.innerHeight / camRatio,
+    window.innerHeight / -camRatio,
+    1,
+    1000
+  );
+
+  camFixedOrthogonal.position.set(
+    fixedCamPoint[0],
+    fixedCamPoint[1],
+    fixedCamPoint[2]
+  );
+  camFixedOrthogonal.lookAt(scene_position);
+  cameras[3] = camFixedOrthogonal;
+
+  // Câmara fixa: projeção perspetiva (5).
+
+  const camFixedPerspective = new THREE.PerspectiveCamera(
+    70,
+    window.innerWidth / window.innerHeight,
+    1,
+    1000
+  );
+
+  camFixedPerspective.position.set(
+    fixedCamPoint[0],
+    fixedCamPoint[1],
+    fixedCamPoint[2]
+  );
+  camFixedPerspective.lookAt(scene_position);
+  cameras[4] = camFixedPerspective;
+}
+
+// Câmara móvel: gancho (6).
+
+const createCamClaw = (parent, cameras, x, y, z) => {
+  const camClaw = new THREE.PerspectiveCamera(
+    45,
+    window.innerWidth / window.innerHeight,
+    1,
+    1000
+  );
+
+  camClaw.position.set(x, y , z);
+
+  camClaw.lookAt(x, -1000, z); 
+  camClaw.rotation.z -= Math.PI / 2;
+  cameras[5] = camClaw;
+  parent.add(camClaw);
+};
 
 ///////////////////////
 /* HANDLE COLLISIONS */
