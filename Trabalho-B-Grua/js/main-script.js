@@ -1,3 +1,5 @@
+"use strict";
+
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
@@ -7,21 +9,21 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 //////////////////////
 /* GLOBAL VARIABLES */
 //////////////////////
-var scene, renderer, currentCamera = 0;
-var cameras = new Array(6);
-var materials = new Array();
-var loads = new Array();
-var animationStage = 0;
+let scene, renderer, currentCamera = 0;
+let cameras = new Array(6);
+let materials = new Array();
+let loads = new Array();
+let animationStage = 0;
 
 const components = new Map();
 const radiusMap = new Map();
-var colliding = null;
+let colliding = null;
 
-var clock;
+let clock;
 
-var keyDownMap = new Map(); // criado porque event.repeat no keydown não parece funcionar
+let keyDownMap = new Map(); // criado porque event.repeat no keydown não parece funcionar
 
-var moveRopeDirection = 0, moveTrolleyDirection = 0, rotateCraneDirection = 0, moveClawDirection = 0;
+let moveRopeDirection = 0, moveTrolleyDirection = 0, rotateCraneDirection = 0, moveClawDirection = 0;
 
 // Crane constants
 const baseLength = 15, baseHeight = 10, baseWidth = baseLength;                         // base
@@ -56,7 +58,6 @@ containerWallLength = containerBaseLength, containerWallWidth = containerBaseWid
 /* CREATE SCENE(S) */
 /////////////////////
 function createScene(){
-    'use strict';
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xE3D8B7);
     createCrane();
@@ -75,9 +76,8 @@ function createScene(){
 
 // LOWER SECTION --------------------------------------------------------------------------------------
 function createCrane(){
-    'use strict';
 
-    var crane = new THREE.Object3D();
+    let crane = new THREE.Object3D();
 
     createBase(crane, 0, baseHeight/2, 0);
     createTower(crane, 0, baseHeight + towerHeight/2, 0);
@@ -86,24 +86,22 @@ function createCrane(){
 }
 
 function createBase(parent, x, y, z){
-    'use strict';
 
-    var geometry = new THREE.BoxGeometry(baseLength, baseHeight, baseWidth);
-    var material = new THREE.MeshBasicMaterial({color: darkMetalColour, wireframe: false});
+    let geometry = new THREE.BoxGeometry(baseLength, baseHeight, baseWidth);
+    let material = new THREE.MeshBasicMaterial({color: darkMetalColour, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry,material);
+    let mesh = new THREE.Mesh(geometry,material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
     components.set('base', mesh);
 }
 
 function createTower(parent, x, y, z){
-    'use strict';
 
-    var geometry = new THREE.BoxGeometry(towerLength, towerHeight, towerWidth);
-    var material = new THREE.MeshBasicMaterial({color: craneColour, wireframe: false});
+    let geometry = new THREE.BoxGeometry(towerLength, towerHeight, towerWidth);
+    let material = new THREE.MeshBasicMaterial({color: craneColour, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
     components.set('tower', mesh);
@@ -112,9 +110,8 @@ function createTower(parent, x, y, z){
 
 // UPPER SECTION -----------------------------------------------------------------------------------------
 function createUpperSection(parent, x, y, z){
-    'use strict';
 
-    var upperSection = new THREE.Object3D();
+    let upperSection = new THREE.Object3D();
 
     createCabin(upperSection, (cabinLength - towerLength)/2, cabinHeight/2, 0);
     createApex(upperSection, 0, (apexHeight/2) + cabinHeight, 0);
@@ -132,12 +129,11 @@ function createUpperSection(parent, x, y, z){
 
 // Cabine
 function createCabin(parent, x, y, z) {
-    'use strict';
 
-    var geometry = new THREE.BoxGeometry(cabinLength, cabinHeight, cabinWidth);
-    var material = new THREE.MeshBasicMaterial({color: cabinColour, wireframe: false});
+    let geometry = new THREE.BoxGeometry(cabinLength, cabinHeight, cabinWidth);
+    let material = new THREE.MeshBasicMaterial({color: cabinColour, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
     
     mesh.position.set(x, y, z);
     parent.add(mesh);
@@ -146,12 +142,11 @@ function createCabin(parent, x, y, z) {
 
 // Porta-Lanca
 function createApex(parent, x, y, z) {
-    'use strict';
 
-    var geometry = new THREE.BoxGeometry(apexLength, apexHeight, apexWidth);
-    var material = new THREE.MeshBasicMaterial({ color: craneColour, wireframe: false});
+    let geometry = new THREE.BoxGeometry(apexLength, apexHeight, apexWidth);
+    let material = new THREE.MeshBasicMaterial({ color: craneColour, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
     components.set('apex', mesh);
@@ -159,12 +154,11 @@ function createApex(parent, x, y, z) {
 
 // Lanca
 function createJib(parent, x, y, z) {
-    'use strict';
 
-    var geometry = new THREE.BoxGeometry(jibLength, jibHeight, jibWidth);
-    var material = new THREE.MeshBasicMaterial( {color: craneColour, wireframe: false});
+    let geometry = new THREE.BoxGeometry(jibLength, jibHeight, jibWidth);
+    let material = new THREE.MeshBasicMaterial( {color: craneColour, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
     components.set('jib', mesh);
@@ -172,12 +166,11 @@ function createJib(parent, x, y, z) {
 
 // Contra-lanca
 function createCounterJib(parent, x, y, z) {
-    'use strict';
     
-    var geometry = new THREE.BoxGeometry(counterjibLength, counterjibHeight, counterjibWidth);
-    var material = new THREE.MeshBasicMaterial( {color: craneColour, wireframe: false});
+    let geometry = new THREE.BoxGeometry(counterjibLength, counterjibHeight, counterjibWidth);
+    let material = new THREE.MeshBasicMaterial( {color: craneColour, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
     components.set('counterJib', mesh);
@@ -185,12 +178,11 @@ function createCounterJib(parent, x, y, z) {
 
 // Contra-peso
 function createCounterWeight(parent, x, y, z) {
-    'use strict';
     
-    var geometry = new THREE.BoxGeometry(weightLength, weightHeight, weightWidth);
-    var material = new THREE.MeshBasicMaterial( {color: darkMetalColour, wireframe: false});
+    let geometry = new THREE.BoxGeometry(weightLength, weightHeight, weightWidth);
+    let material = new THREE.MeshBasicMaterial( {color: darkMetalColour, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     parent.add(mesh);
     components.set('counterWeight', mesh);
@@ -198,14 +190,13 @@ function createCounterWeight(parent, x, y, z) {
 
 // Tirante
 function createPendant(parent, x1, y1, z1, x2, y2, z2, isFront) {
-    'use strict';
-    var hip = Math.sqrt(Math.pow(x1-x2, 2) + Math.pow(y1-y2, 2));
-    var angle = Math.atan(Math.abs(y2-y1)/Math.abs(x2-x1)) + Math.PI/2;
+    let hip = Math.sqrt(Math.pow(x1-x2, 2) + Math.pow(y1-y2, 2));
+    let angle = Math.atan(Math.abs(y2-y1)/Math.abs(x2-x1)) + Math.PI/2;
 
-    var geometry = new THREE.CylinderGeometry(pendentRadius, pendentRadius, hip, 10);
-    var material = new THREE.MeshBasicMaterial( {color: metalColour, wireframe: false});
+    let geometry = new THREE.CylinderGeometry(pendentRadius, pendentRadius, hip, 10);
+    let material = new THREE.MeshBasicMaterial( {color: metalColour, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
     
     if(isFront) angle = -angle;
 
@@ -219,9 +210,8 @@ function createPendant(parent, x1, y1, z1, x2, y2, z2, isFront) {
 //--------------------------------------------------------------------------------------
 // FRONT SECTION ///////////////////////////////////////////
 function createFrontSection(parent, x, y, z) {
-    'use strict';
 
-    var frontSection = new THREE.Object3D();
+    let frontSection = new THREE.Object3D();
 
     createTrolley(frontSection, 0, 0, 0);
     createCable(frontSection, 0, 0, 0);
@@ -234,12 +224,11 @@ function createFrontSection(parent, x, y, z) {
 
 // Carrinho
 function createTrolley(parent, x, y, z) {
-    'use strict';
 
-    var geometry = new THREE.BoxGeometry(trolleyLength, trolleyHeight, trolleyWidth);
-    var material = new THREE.MeshBasicMaterial( {color: darkMetalColour, wireframe: false});
+    let geometry = new THREE.BoxGeometry(trolleyLength, trolleyHeight, trolleyWidth);
+    let material = new THREE.MeshBasicMaterial( {color: darkMetalColour, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x,y,z);
     parent.add(mesh);
     components.set('trolley', mesh);
@@ -247,12 +236,11 @@ function createTrolley(parent, x, y, z) {
 
 // Cabo
 function createCable(parent, x, y, z) {
-    'use strict';
 
-    var geometry = new THREE.CylinderGeometry(cableRadius, cableRadius, cableLength, 10);
-    var material = new THREE.MeshBasicMaterial( {color: metalColour, wireframe: false});
+    let geometry = new THREE.CylinderGeometry(cableRadius, cableRadius, cableLength, 10);
+    let material = new THREE.MeshBasicMaterial( {color: metalColour, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
     
     mesh.position.set(x,y,z);
 
@@ -265,9 +253,8 @@ function createCable(parent, x, y, z) {
 //--------------------------------------------------------------------------------------
 // CLAW SECTION ///////////////////////////////////////////
 function createClawSection(parent, x, y, z) {
-    'use strict';
 
-    var clawSection = new THREE.Object3D();
+    let clawSection = new THREE.Object3D();
 
     createBlock(clawSection, 0, blockHeight/2, 0);
     createClaw(clawSection, 0, 0, 0, 0, "frontClaw");
@@ -282,12 +269,11 @@ function createClawSection(parent, x, y, z) {
 
 // Bloco da garra
 function createBlock(parent, x, y, z) {
-    'use strict';
 
-    var geometry = new THREE.BoxGeometry(blockLength, blockHeight, blockWidth);
-    var material = new THREE.MeshBasicMaterial( {color: darkMetalColour, wireframe: false});
+    let geometry = new THREE.BoxGeometry(blockLength, blockHeight, blockWidth);
+    let material = new THREE.MeshBasicMaterial( {color: darkMetalColour, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
     parent.add(mesh);
@@ -296,12 +282,11 @@ function createBlock(parent, x, y, z) {
 
 // Dedo da garra
 function createClaw(parent, x, y, z, rad, name) {
-    'use strict';
 
-    var geometry = new CustomTetrahedronGeometry();
-    var material = new THREE.MeshBasicMaterial( {color: metalColour, wireframe: false});
+    let geometry = new CustomTetrahedronGeometry();
+    let material = new THREE.MeshBasicMaterial( {color: metalColour, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
     
     mesh.scale.set(clawLength,clawHeight,clawWidth);
     mesh.rotateY(rad);
@@ -313,12 +298,11 @@ function createClaw(parent, x, y, z, rad, name) {
 //--------------------------------------------------------------------------------------
 // CONTAINER ///////////////////////////////////////////
 function createContainer() {
-    'use strict';
 
-    var container = new THREE.Object3D();
+    let container = new THREE.Object3D();
     
     createContainerBase(container, 0, containerWallThickness/2, 0);
-    var wallY = containerWallHeight/2;
+    let wallY = containerWallHeight/2;
     createContainerWall(container, 0, wallY, containerBaseWidth/2);
     createContainerWall(container, 0, wallY, -containerBaseWidth/2);
     createContainerWall(container, containerBaseLength/2-containerWallThickness/2, wallY, 0, true);
@@ -331,12 +315,11 @@ function createContainer() {
 }
 
 function createContainerBase(parent, x, y, z) {
-    'use strict';
 
-    var geometry = new THREE.BoxGeometry(containerBaseLength-0.1, containerWallThickness, containerBaseWidth-0.1); // -0.1 para impedir conflitos de cor na sobreposição com as laterais
-    var material = new THREE.MeshBasicMaterial( {color: containerBaseColour, wireframe: false});
+    let geometry = new THREE.BoxGeometry(containerBaseLength-0.1, containerWallThickness, containerBaseWidth-0.1); // -0.1 para impedir conflitos de cor na sobreposição com as laterais
+    let material = new THREE.MeshBasicMaterial( {color: containerBaseColour, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
     parent.add(mesh);
@@ -344,15 +327,14 @@ function createContainerBase(parent, x, y, z) {
 }
 
 function createContainerWall(parent, x, y, z, isWidth) {
-    'use strict';
 
-    var size = containerBaseLength;
+    let size = containerBaseLength;
     if (isWidth) size = containerBaseWidth;
 
-    var geometry = new THREE.BoxGeometry(size, containerWallHeight, containerWallThickness);
-    var material = new THREE.MeshBasicMaterial( {color: containerColour, wireframe: false});
+    let geometry = new THREE.BoxGeometry(size, containerWallHeight, containerWallThickness);
+    let material = new THREE.MeshBasicMaterial( {color: containerColour, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
 
     if (isWidth) mesh.rotateY(Math.PI/2);
 
@@ -365,7 +347,6 @@ function createContainerWall(parent, x, y, z, isWidth) {
 // LOADS ///////////////////////////////////////////
 
 function createLoads() {
-    'use strict';
 
     createCubeLoad(scene, -41, 4, -20);
     createDodecahedronLoad(scene, 24, 2, 42);
@@ -375,14 +356,13 @@ function createLoads() {
 }
 
 function createCubeLoad(parent, x, y, z) {
-    'use strict';
 
-    var size = y*2;
+    let size = y*2;
 
-    var geometry = new THREE.BoxGeometry(size, size, size);
-    var material = new THREE.MeshBasicMaterial( {color: loadColour2, wireframe: false});
+    let geometry = new THREE.BoxGeometry(size, size, size);
+    let material = new THREE.MeshBasicMaterial( {color: loadColour2, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
     mesh.name = "cube";
 
     mesh.position.set(x, y, z);
@@ -392,14 +372,13 @@ function createCubeLoad(parent, x, y, z) {
 }
 
 function createDodecahedronLoad(parent, x, y, z) {
-    'use strict';
 
-    var size = y;
+    let size = y;
 
-    var geometry = new THREE.DodecahedronGeometry(size);
-    var material = new THREE.MeshBasicMaterial( {color: loadColour2, wireframe: false});
+    let geometry = new THREE.DodecahedronGeometry(size);
+    let material = new THREE.MeshBasicMaterial( {color: loadColour2, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
     mesh.name = "dodecahedron";
 
     mesh.position.set(x, y, z);
@@ -409,14 +388,13 @@ function createDodecahedronLoad(parent, x, y, z) {
 }
 
 function createIcosahedronLoad(parent, x, y, z) {
-    'use strict';
 
-    var size = y;
+    let size = y;
 
-    var geometry = new THREE.IcosahedronGeometry(size);
-    var material = new THREE.MeshBasicMaterial( {color: loadColour1, wireframe: false});
+    let geometry = new THREE.IcosahedronGeometry(size);
+    let material = new THREE.MeshBasicMaterial( {color: loadColour1, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
     mesh.name = "icosahedron";
@@ -426,14 +404,13 @@ function createIcosahedronLoad(parent, x, y, z) {
 }
 
 function createTorusLoad(parent, x, y, z) {
-    'use strict';
 
-    var size = y;
+    let size = y;
 
-    var geometry = new THREE.TorusGeometry(size, size/3);
-    var material = new THREE.MeshBasicMaterial( {color: loadColour2, wireframe: false});
+    let geometry = new THREE.TorusGeometry(size, size/3);
+    let material = new THREE.MeshBasicMaterial( {color: loadColour2, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
     mesh.name = "torus";
@@ -444,14 +421,13 @@ function createTorusLoad(parent, x, y, z) {
 }
 
 function createKnotLoad(parent, x, y, z) {
-    'use strict';
 
-    var size = y;
+    let size = y;
 
-    var geometry = new THREE.TorusKnotGeometry(size, size/3);
-    var material = new THREE.MeshBasicMaterial( {color: loadColour1, wireframe: false});
+    let geometry = new THREE.TorusKnotGeometry(size, size/3);
+    let material = new THREE.MeshBasicMaterial( {color: loadColour1, wireframe: false});
     materials.push(material);
-    var mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, material);
 
     mesh.rotateX(Math.PI/2);
     mesh.position.set(x, y, z);
@@ -494,7 +470,7 @@ function CustomTetrahedronGeometry() {
         uvs.push(...vertex.uv);
     }
 
-    var geometry = new THREE.BufferGeometry();
+    let geometry = new THREE.BufferGeometry();
     const positionNumComponents = 3;
     const normalNumComponents = 3;
     const uvNumComponents = 2;
@@ -515,17 +491,16 @@ function CustomTetrahedronGeometry() {
 /* CHECK COLLISIONS */
 //////////////////////
 function checkCollisions(){
-    'use strict';
     
     if (colliding != null) return;
 
-    var claw = components.get("clawSection");
-    var clawWcsPos = new THREE.Vector3();
+    let claw = components.get("clawSection");
+    let clawWcsPos = new THREE.Vector3();
     claw.getWorldPosition(clawWcsPos);
-    var clawR = clawLength;
+    let clawR = clawLength;
 
     loads.every(l => {
-        var r = radiusMap.get(l.name);
+        let r = radiusMap.get(l.name);
         if ( // soma_dos_raios ^ 2 >= distância_entre_centros ^ 2
             (r + clawR)**2 >= (l.position.x - clawWcsPos.x)**2 + (l.position.y - clawWcsPos.y)**2 + (l.position.z - clawWcsPos.z)**2
         ) {
@@ -542,7 +517,6 @@ function checkCollisions(){
 //////////////////////
 
  function createCameras(cameras, scene_position) {
-  "use strict";
 
   // Câmara frontal (1).
   const camFrontal = new THREE.OrthographicCamera(
@@ -644,17 +618,18 @@ const createCamClaw = (parent, cameras, x, y, z) => {
 /* HANDLE COLLISIONS */
 ///////////////////////
 function handleCollisions(delta){
-    'use strict';
-    
+    let claw;
+    let direction;
+    let cable;
     const period = Math.PI * 2; // rotation period, use to compare angles above a full rotation (e.g. have 450 degrees == 90 degrees)
     function mod(n, d) {return ((n%d)+d)%d} // n%d in js can be negative, this is always positive
 
     switch(animationStage) {
         case 0: // move claws to slightly open position (to open or close, depending on position)
-            var claw = components.get("frontClaw");    
+            claw = components.get("frontClaw");    
             const desiredAngle = -Math.PI/10; // angle for the claws to be at before object snapping
 
-            var direction = claw.rotation.z > desiredAngle ? 1 : -1; // check if it needs to open or close to achive 60 degrees
+            direction = claw.rotation.z > desiredAngle ? 1 : -1; // check if it needs to open or close to achive 60 degrees
 
             moveClaw(direction, delta);
 
@@ -665,18 +640,18 @@ function handleCollisions(delta){
             break;
         
         case 1: // snap object to claw            
-            var clawSection = components.get("clawSection");
+            let clawSection = components.get("clawSection");
 
             clawSection.add(colliding);
 
-            var newY = -radiusMap.get(colliding.name);
+            let newY = -radiusMap.get(colliding.name);
             colliding.position.set(0,newY,0);
 
             animationStage += 1;
             break;
         
         case 2: // close claws
-            var claw = components.get("frontClaw"); 
+            claw = components.get("frontClaw"); 
             const closedAngle = -Math.PI/4; // angle for the claws to close at
             moveClaw(1, delta);
 
@@ -688,7 +663,7 @@ function handleCollisions(delta){
         
         case 3: // pull cable up
         case 9:
-            var cable = components.get("cable");
+            cable = components.get("cable");
             const desiredScaling = 1.02;
 
             moveRope(1, delta);
@@ -699,9 +674,9 @@ function handleCollisions(delta){
             break;
 
         case 4: // rotate upper section
-            var upperSection = components.get("upperSection");
+            let upperSection = components.get("upperSection");
 
-            var direction = mod(upperSection.rotation.y, period) > period / 2 ? 1 : -1; // check which rotation is closest 
+            direction = mod(upperSection.rotation.y, period) > period / 2 ? 1 : -1; // check which rotation is closest 
 
             rotateCrane(direction, delta);
 
@@ -712,10 +687,10 @@ function handleCollisions(delta){
             break;
 
         case 5: // move trolley
-            var frontSection = components.get("frontSection");
+            let frontSection = components.get("frontSection");
             const desiredValue = 55;
 
-            var direction = frontSection.position.x < desiredValue ? 1 : -1;
+            let direction = frontSection.position.x < desiredValue ? 1 : -1;
 
             moveTrolley(direction, delta);
 
@@ -725,7 +700,7 @@ function handleCollisions(delta){
             break;
 
         case 6: // pull cable down
-            var cable = components.get("cable");
+            let cable = components.get("cable");
             const desiredScale = 7;
 
             moveRope(-1, delta);
@@ -736,7 +711,7 @@ function handleCollisions(delta){
             break;
 
         case 7: // open claw
-            var claw = components.get("frontClaw"); 
+            let claw = components.get("frontClaw"); 
             const openedAngle = -Math.PI/10; // angle for the claws to open at
             moveClaw(-1, delta);
 
@@ -765,9 +740,8 @@ function handleCollisions(delta){
 /* UPDATE */
 ////////////
 function update(){
-    'use strict';
 
-    var delta = clock.getDelta();
+    let delta = clock.getDelta();
     checkCollisions();
 
     if(colliding == null) {
@@ -784,7 +758,6 @@ function update(){
 /* DISPLAY */
 /////////////
 function render() {
-    'use strict';
     renderer.render(scene, cameras[currentCamera]);
 }
 
@@ -792,7 +765,6 @@ function render() {
 /* INITIALIZE ANIMATION CYCLE */
 ////////////////////////////////
 function init() {
-    'use strict';
     renderer = new THREE.WebGLRenderer({
         antialias: true
     });
@@ -814,7 +786,6 @@ function init() {
 /* ANIMATION CYCLE */
 /////////////////////
 function animate() {
-    'use strict';
 
     update();
     render();
@@ -828,18 +799,18 @@ function animate() {
 function rotateCrane(direction, delta) {
     'use strict'
 
-    var upperSection = components.get('upperSection');
-    var rotation = direction * Math.PI/180 * delta / 0.015;
+    let upperSection = components.get('upperSection');
+    let rotation = direction * Math.PI/180 * delta / 0.015;
     upperSection.rotation.y += rotation;
 }
 
 function moveTrolley(direction, delta) {
     'use strict'
 
-    var frontSection = components.get('frontSection');
-    var jib = components.get('jib');
+    let frontSection = components.get('frontSection');
+    let jib = components.get('jib');
 
-    var translation = direction * 0.5 * delta / 0.015;
+    let translation = direction * 0.5 * delta / 0.015;
 
     // dont move past jib
     if (translation > 0 && frontSection.position.x + translation >= jib.position.x + jibLength/2 - trolleyLength/2 - 0.1) {
@@ -858,17 +829,17 @@ function moveTrolley(direction, delta) {
 function moveRope(direction, delta) {
     'use strict'
 
-    var origin = scene.children[0];
-    var cable = components.get('cable');
-    var claw = components.get('clawSection');
-    var frontSection = components.get('frontSection');
-    var upperSection = components.get('upperSection');
+    let origin = scene.children[0];
+    let cable = components.get('cable');
+    let claw = components.get('clawSection');
+    let frontSection = components.get('frontSection');
+    let upperSection = components.get('upperSection');
 
-    var translation = direction * 0.5 * delta / 0.015;
-    var length = cable.geometry.parameters.height * cable.scale['y'];
-    var missingHeight;
+    let translation = direction * 0.5 * delta / 0.015;
+    let length = cable.geometry.parameters.height * cable.scale['y'];
+    let missingHeight;
 
-    var clawReferencialHeight = claw.position.y + frontSection.position.y + upperSection.position.y; // claw height based on origin referencial
+    let clawReferencialHeight = claw.position.y + frontSection.position.y + upperSection.position.y; // claw height based on origin referencial
 
     // dont move past ground
     if (translation < 0 && clawReferencialHeight - clawLength + translation <= origin.position.y) {
@@ -878,7 +849,7 @@ function moveRope(direction, delta) {
         return;
     }
 
-    var originalClawHeight = 0 - cableLength - blockHeight;  // claw original height
+    let originalClawHeight = 0 - cableLength - blockHeight;  // claw original height
 
     // dont move past original position
     if (translation > 0 && claw.position.y + translation >= originalClawHeight) {
@@ -896,12 +867,12 @@ function moveRope(direction, delta) {
 function moveClaw(direction, delta) {
     'use strict'
 
-    var frontClaw = components.get('frontClaw');
-    var leftClaw = components.get('leftClaw');
-    var backClaw = components.get('backClaw');
-    var rightClaw = components.get('rightClaw');
+    let frontClaw = components.get('frontClaw');
+    let leftClaw = components.get('leftClaw');
+    let backClaw = components.get('backClaw');
+    let rightClaw = components.get('rightClaw');
 
-    var rotation = direction * Math.PI/180 * delta / 0.015;
+    let rotation = direction * Math.PI/180 * delta / 0.015;
 
     //dont open too much
     if (rotation < 0 && frontClaw.rotation.z - rotation >= 0) {
@@ -941,7 +912,6 @@ function toggleWireframe() {
 /* RESIZE WINDOW CALLBACK */
 ////////////////////////////
 function onResize() { 
-    'use strict';
     renderer.setSize(window.innerWidth, window.innerHeight);
     if (window.innerHeight > 0 && window.innerWidth > 0) {
         cameras.forEach((camera) => {
@@ -983,7 +953,6 @@ const switchCamera = (n /* index of new camera */) => {
 /* KEY DOWN CALLBACK */
 ///////////////////////
 function onKeyDown(event) {
-    'use strict';
 
     /*Este evento para movimentar a grua só devia ser lido no primeiro instante em que a tecla vai para baixo,
     mas como manter a tecla em baixo faz com que se repita o input, o evento seria, normalmente, repetido
@@ -1091,7 +1060,6 @@ function onKeyDown(event) {
 /* KEY UP CALLBACK */
 ///////////////////////
 function onKeyUp(event) {
-    'use strict';
 
     switch (event.key) {        
         case 'Q':
