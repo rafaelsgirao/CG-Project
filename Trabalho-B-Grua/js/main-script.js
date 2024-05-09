@@ -965,9 +965,8 @@ function onResize() {
         camera.top = window.innerHeight / camRatio;
         camera.bottom = -window.innerHeight / camRatio;
       }
+      camera.updateProjectionMatrix();
     });
-    cameras[currentCamera].aspect = window.innerWidth / window.innerHeight;
-    cameras[currentCamera].updateProjectionMatrix();
   }
 }
 
