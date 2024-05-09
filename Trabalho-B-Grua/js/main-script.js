@@ -570,11 +570,7 @@ function checkCollisions(){
     1000
   );
 
-  camFixedOrthogonal.position.set(
-    fixedCamPoint[0],
-    fixedCamPoint[1],
-    fixedCamPoint[2]
-  );
+  camFixedOrthogonal.position.set(...fixedCamPoint);
   camFixedOrthogonal.lookAt(scene_position);
   cameras[3] = camFixedOrthogonal;
 
@@ -587,11 +583,7 @@ function checkCollisions(){
     1000
   );
 
-  camFixedPerspective.position.set(
-    fixedCamPoint[0],
-    fixedCamPoint[1],
-    fixedCamPoint[2]
-  );
+  camFixedPerspective.position.set(...fixedCamPoint);
   camFixedPerspective.lookAt(scene_position);
   cameras[4] = camFixedPerspective;
 }
@@ -829,14 +821,14 @@ function moveTrolley(direction, delta) {
 function moveRope(direction, delta) {
     'use strict'
 
-    let origin = scene.children[0];
-    let cable = components.get('cable');
-    let claw = components.get('clawSection');
-    let frontSection = components.get('frontSection');
-    let upperSection = components.get('upperSection');
+    const origin = scene.children[0];
+    const cable = components.get('cable');
+    const claw = components.get('clawSection');
+    const frontSection = components.get('frontSection');
+    const upperSection = components.get('upperSection');
 
-    let translation = direction * 0.5 * delta / 0.015;
-    let length = cable.geometry.parameters.height * cable.scale['y'];
+    const translation = direction * 0.5 * delta / 0.015;
+    const length = cable.geometry.parameters.height * cable.scale['y'];
     let missingHeight;
 
     let clawReferencialHeight = claw.position.y + frontSection.position.y + upperSection.position.y; // claw height based on origin referencial
