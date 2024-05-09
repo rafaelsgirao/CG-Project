@@ -848,7 +848,7 @@ function moveTrolley(direction, delta) {
     }
     // dont move inside cabin
     if (translation < 0 && frontSection.position.x + translation <= jib.position.x - jibLength/2 + cabinLength/2 + trolleyLength/2) {
-        jib.position.x - jibLength/2 + cabinLength/2 + trolleyLength/2
+        frontSection.position.x = jib.position.x - jibLength/2 + cabinLength/2 + trolleyLength/2
         return;
     }
     frontSection.translateX(translation);
