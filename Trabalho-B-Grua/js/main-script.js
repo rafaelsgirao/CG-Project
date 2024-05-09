@@ -651,8 +651,6 @@ const createCamClaw = (parent, cameras, x, y, z) => {
 /* HANDLE COLLISIONS */
 ///////////////////////
 function handleCollisions(delta) {
-  let claw;
-  let direction;
   let cable;
   const period = Math.PI * 2; // rotation period, use to compare angles above a full rotation (e.g. have 450 degrees == 90 degrees)
   function mod(n, d) {
@@ -660,11 +658,12 @@ function handleCollisions(delta) {
   } // n%d in js can be negative, this is always positive
 
   switch (animationStage) {
-    case 0: // move claws to slightly open position (to open or close, depending on position)
-      claw = components.get('frontClaw');
+    case 0: {
+      // move claws to slightly open position (to open or close, depending on position)
+      const claw = components.get('frontClaw');
       const desiredAngle = -Math.PI / 10; // angle for the claws to be at before object snapping
 
-      direction = claw.rotation.z > desiredAngle ? 1 : -1; // check if it needs to open or close to achive 60 degrees
+      const direction = claw.rotation.z > desiredAngle ? 1 : -1; // check if it needs to open or close to achive 60 degrees
 
       moveClaw(direction, delta);
 
@@ -674,9 +673,11 @@ function handleCollisions(delta) {
         animationStage += 1;
       }
       break;
+    }
 
-    case 1: // snap object to claw
-      let clawSection = components.get('clawSection');
+    case 1: {
+      // snap object to claw
+      const clawSection = components.get('clawSection');
 
       clawSection.add(colliding);
 
@@ -685,9 +686,10 @@ function handleCollisions(delta) {
 
       animationStage += 1;
       break;
-
-    case 2: // close claws
-      claw = components.get('frontClaw');
+    }
+    case 2: {
+      // close claws
+      const claw = components.get('frontClaw');
       const closedAngle = -Math.PI / 4; // angle for the claws to close at
       moveClaw(1, delta);
 
@@ -696,9 +698,9 @@ function handleCollisions(delta) {
         animationStage += 1;
       }
       break;
-
+    }
     case 3: // pull cable up
-    case 9:
+    case 9: {
       cable = components.get('cable');
       const desiredScaling = 1.02;
 
@@ -708,11 +710,12 @@ function handleCollisions(delta) {
         animationStage += 1;
       }
       break;
-
-    case 4: // rotate upper section
+    }
+    case 4: {
+      // rotate upper section
       let upperSection = components.get('upperSection');
 
-      direction = mod(upperSection.rotation.y, period) > period / 2 ? 1 : -1; // check which rotation is closest
+      const direction = mod(upperSection.rotation.y, period) > period / 2 ? 1 : -1; // check which rotation is closest
 
       rotateCrane(direction, delta);
 
@@ -721,12 +724,13 @@ function handleCollisions(delta) {
         animationStage += 1;
       }
       break;
-
-    case 5: // move trolley
+    }
+    case 5: {
+      // move trolley
       let frontSection = components.get('frontSection');
       const desiredValue = 55;
 
-      let direction = frontSection.position.x < desiredValue ? 1 : -1;
+      const direction = frontSection.position.x < desiredValue ? 1 : -1;
 
       moveTrolley(direction, delta);
 
@@ -734,8 +738,9 @@ function handleCollisions(delta) {
         animationStage += 1;
       }
       break;
-
-    case 6: // pull cable down
+    }
+    case 6: {
+      // pull cable down
       let cable = components.get('cable');
       const desiredScale = 7;
 
@@ -745,9 +750,10 @@ function handleCollisions(delta) {
         animationStage += 1;
       }
       break;
-
-    case 7: // open claw
-      let claw = components.get('frontClaw');
+    }
+    case 7: {
+      // open claw
+      const claw = components.get('frontClaw');
       const openedAngle = -Math.PI / 10; // angle for the claws to open at
       moveClaw(-1, delta);
 
@@ -756,8 +762,9 @@ function handleCollisions(delta) {
         animationStage += 1;
       }
       break;
-
-    case 8: // decouple object from claw
+    }
+    case 8: {
+      // decouple object from claw
       scene.add(colliding);
 
       colliding.position.set(0, 0, 0);
@@ -765,7 +772,7 @@ function handleCollisions(delta) {
 
       animationStage += 1;
       break;
-
+    }
     default: // reset stage counter and colliding variable
       animationStage = 0;
       colliding = null;
