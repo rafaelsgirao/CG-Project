@@ -108,7 +108,7 @@ function createScene() {
 
 // LOWER SECTION --------------------------------------------------------------------------------------
 function createCrane() {
-  let crane = new THREE.Object3D();
+  const crane = new THREE.Object3D();
 
   createBase(crane, 0, baseHeight / 2, 0);
   createTower(crane, 0, baseHeight + towerHeight / 2, 0);
@@ -117,8 +117,8 @@ function createCrane() {
 }
 
 function createBase(parent, x, y, z) {
-  let geometry = new THREE.BoxGeometry(baseLength, baseHeight, baseWidth);
-  let material = new THREE.MeshBasicMaterial({ color: darkMetalColour, wireframe: false });
+  const geometry = new THREE.BoxGeometry(baseLength, baseHeight, baseWidth);
+  const material = new THREE.MeshBasicMaterial({ color: darkMetalColour, wireframe: false });
   materials.push(material);
   let mesh = new THREE.Mesh(geometry, material);
   mesh.position.set(x, y, z);
@@ -651,7 +651,6 @@ const createCamClaw = (parent, cameras, x, y, z) => {
 /* HANDLE COLLISIONS */
 ///////////////////////
 function handleCollisions(delta) {
-  let cable;
   const period = Math.PI * 2; // rotation period, use to compare angles above a full rotation (e.g. have 450 degrees == 90 degrees)
   function mod(n, d) {
     return ((n % d) + d) % d;
@@ -681,7 +680,7 @@ function handleCollisions(delta) {
 
       clawSection.add(colliding);
 
-      let newY = -radiusMap.get(colliding.name);
+      const newY = -radiusMap.get(colliding.name);
       colliding.position.set(0, newY, 0);
 
       animationStage += 1;
@@ -701,7 +700,7 @@ function handleCollisions(delta) {
     }
     case 3: // pull cable up
     case 9: {
-      cable = components.get('cable');
+      const cable = components.get('cable');
       const desiredScaling = 1.02;
 
       moveRope(1, delta);
@@ -713,7 +712,7 @@ function handleCollisions(delta) {
     }
     case 4: {
       // rotate upper section
-      let upperSection = components.get('upperSection');
+      const upperSection = components.get('upperSection');
 
       const direction = mod(upperSection.rotation.y, period) > period / 2 ? 1 : -1; // check which rotation is closest
 
@@ -727,7 +726,7 @@ function handleCollisions(delta) {
     }
     case 5: {
       // move trolley
-      let frontSection = components.get('frontSection');
+      const frontSection = components.get('frontSection');
       const desiredValue = 55;
 
       const direction = frontSection.position.x < desiredValue ? 1 : -1;
@@ -741,7 +740,7 @@ function handleCollisions(delta) {
     }
     case 6: {
       // pull cable down
-      let cable = components.get('cable');
+      const cable = components.get('cable');
       const desiredScale = 7;
 
       moveRope(-1, delta);
@@ -840,18 +839,18 @@ function animate() {
 function rotateCrane(direction, delta) {
   'use strict';
 
-  let upperSection = components.get('upperSection');
-  let rotation = (((direction * Math.PI) / 180) * delta) / 0.015;
+  const upperSection = components.get('upperSection');
+  const rotation = (((direction * Math.PI) / 180) * delta) / 0.015;
   upperSection.rotation.y += rotation;
 }
 
 function moveTrolley(direction, delta) {
   'use strict';
 
-  let frontSection = components.get('frontSection');
-  let jib = components.get('jib');
+  const frontSection = components.get('frontSection');
+  const jib = components.get('jib');
 
-  let translation = (direction * 0.5 * delta) / 0.015;
+  const translation = (direction * 0.5 * delta) / 0.015;
 
   // dont move past jib
   if (
@@ -916,12 +915,12 @@ function moveRope(direction, delta) {
 function moveClaw(direction, delta) {
   'use strict';
 
-  let frontClaw = components.get('frontClaw');
-  let leftClaw = components.get('leftClaw');
-  let backClaw = components.get('backClaw');
-  let rightClaw = components.get('rightClaw');
+  const frontClaw = components.get('frontClaw');
+  const leftClaw = components.get('leftClaw');
+  const backClaw = components.get('backClaw');
+  const rightClaw = components.get('rightClaw');
 
-  let rotation = (((direction * Math.PI) / 180) * delta) / 0.015;
+  const rotation = (((direction * Math.PI) / 180) * delta) / 0.015;
 
   //dont open too much
   if (rotation < 0 && frontClaw.rotation.z - rotation >= 0) {
