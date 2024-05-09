@@ -14,6 +14,7 @@ var loads = new Array();
 var animationStage = 0;
 
 const components = new Map();
+const radiusMap = new Map();
 var colliding = null;
 
 var clock;
@@ -273,7 +274,6 @@ function createClawSection(parent, x, y, z) {
     createClaw(clawSection, 0, 0, 0, Math.PI/2, "leftClaw");
     createClaw(clawSection, 0, 0, 0, Math.PI, "backClaw");
     createClaw(clawSection, 0, 0, 0, Math.PI*1.5, "rightClaw");
-
     createCamClaw(clawSection, cameras, 0, 0, 0);
     clawSection.position.set(x,y,z);
     parent.add(clawSection);
@@ -383,10 +383,12 @@ function createCubeLoad(parent, x, y, z) {
     var material = new THREE.MeshBasicMaterial( {color: loadColour2, wireframe: false});
     materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
+    mesh.name = "cube";
 
     mesh.position.set(x, y, z);
     parent.add(mesh);
     loads.push(mesh);
+    radiusMap.set(mesh.name, size/2);
 }
 
 function createDodecahedronLoad(parent, x, y, z) {
@@ -398,10 +400,12 @@ function createDodecahedronLoad(parent, x, y, z) {
     var material = new THREE.MeshBasicMaterial( {color: loadColour2, wireframe: false});
     materials.push(material);
     var mesh = new THREE.Mesh(geometry, material);
+    mesh.name = "dodecahedron";
 
     mesh.position.set(x, y, z);
     parent.add(mesh);
     loads.push(mesh);
+    radiusMap.set(mesh.name, size);
 }
 
 function createIcosahedronLoad(parent, x, y, z) {
@@ -415,8 +419,10 @@ function createIcosahedronLoad(parent, x, y, z) {
     var mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
+    mesh.name = "icosahedron";
     parent.add(mesh);
     loads.push(mesh);
+    radiusMap.set(mesh.name, size);
 }
 
 function createTorusLoad(parent, x, y, z) {
@@ -430,9 +436,11 @@ function createTorusLoad(parent, x, y, z) {
     var mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
+    mesh.name = "torus";
 
     parent.add(mesh);
     loads.push(mesh);
+    radiusMap.set(mesh.name, size);
 }
 
 function createKnotLoad(parent, x, y, z) {
@@ -447,9 +455,11 @@ function createKnotLoad(parent, x, y, z) {
 
     mesh.rotateX(Math.PI/2);
     mesh.position.set(x, y, z);
+    mesh.name = "knot";
 
     parent.add(mesh);
     loads.push(mesh);
+    radiusMap.set(mesh.name, size);
 }
 
 //////////////////////
@@ -510,10 +520,14 @@ function checkCollisions(){
     if (colliding != null) return;
 
     var claw = components.get("clawSection");
+    var clawWcsPos = new THREE.Vector3();
+    claw.getWorldPosition(clawWcsPos);
+    var clawR = clawLength;
 
     loads.every(l => {
+        var r = radiusMap.get(l.name);
         if ( // soma_dos_raios ^ 2 >= distância_entre_centros ^ 2
-            (l.radius + claw.radius)**2 >= (l.position.x - claw.position.x)**2 + (l.position.y - claw.position.y)**2 + (l.position.z - claw.position.z)**2
+            (r + clawR)**2 >= (l.position.x - clawWcsPos.x)**2 + (l.position.y - clawWcsPos.y)**2 + (l.position.z - clawWcsPos.z)**2
         ) {
             colliding = l;
             return false;
@@ -655,7 +669,7 @@ function handleCollisions(delta){
 
             clawSection.add(colliding);
 
-            var newY = -colliding.position.y; // TODO dar-lhe um valor baseado no raio do objeto
+            var newY = -radiusMap.get(colliding.name);
             colliding.position.set(0,newY,0);
 
             animationStage += 1;
@@ -930,6 +944,17 @@ function onResize() {
     'use strict';
     renderer.setSize(window.innerWidth, window.innerHeight);
     if (window.innerHeight > 0 && window.innerWidth > 0) {
+        cameras.forEach((camera) => {
+            if (camera.isPerspectiveCamera) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+            }
+            else {
+                camera.left = -window.innerWidth / camRatio;
+                camera.right = window.innerWidth / camRatio;
+                camera.top = window.innerHeight / camRatio;
+                camera.bottom = -window.innerHeight / camRatio;
+            }
+        });
         cameras[currentCamera].aspect = window.innerWidth / window.innerHeight;
         cameras[currentCamera].updateProjectionMatrix();
     }
@@ -966,7 +991,7 @@ function onKeyDown(event) {
     event.repeat deveria dar esta informação, mas nos meus testes dava sempre valor false*/
 
     switch (event.key) {
-        case " ":
+        case "7":
             toggleWireframe();
             enableHUDButton(event.key);
             break;
@@ -1054,10 +1079,6 @@ function onKeyDown(event) {
                 enableHUDButton(event.key);
 
             }
-            break;
-            
-        case 'z': // TODO remove DEBUG
-            colliding = loads[3];
             break;
 
         default:
