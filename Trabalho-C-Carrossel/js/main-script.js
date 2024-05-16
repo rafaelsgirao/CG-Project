@@ -53,6 +53,8 @@ function update() {
 /////////////
 function render() {
   'use strict';
+  
+  renderer.render(scene, cameras[currentCamera]);
 }
 
 ////////////////////////////////
@@ -67,6 +69,11 @@ function init() {
 /////////////////////
 function animate() {
   'use strict';
+
+  update();
+  render();
+
+  requestAnimationFrame(animate);
 }
 
 ////////////////////////////
@@ -74,6 +81,22 @@ function animate() {
 ////////////////////////////
 function onResize() {
   'use strict';
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  if (window.innerHeight > 0 && window.innerWidth > 0) {
+    cameras.forEach((camera) => {
+      if (camera.isPerspectiveCamera) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+      } else {
+        camera.left = -window.innerWidth / camRatio;
+        camera.right = window.innerWidth / camRatio;
+        camera.top = window.innerHeight / camRatio;
+        camera.bottom = -window.innerHeight / camRatio;
+      }
+      camera.updateProjectionMatrix();
+    });
+  }
 }
 
 ///////////////////////
