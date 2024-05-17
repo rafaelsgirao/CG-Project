@@ -23,6 +23,8 @@ let cylinderRadius =10, ring1Radius =20, ring2Radius =30, ring3Radius=40;
 let cylinderHeight = 50, ringHeight = 20;
 let skydomeRadius = 500;
 
+let directionalLight;
+
 /////////////////////
 /* CREATE SCENE(S) */
 /////////////////////
@@ -51,9 +53,14 @@ function createCameras() {
 /////////////////////
 
 function createLights() {
-  var ambientLight = new THREE.AmbientLight(0xff8000, 0.2);
-
+  const ambientLight = new THREE.AmbientLight(0xff8000, 0.2);
+  directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  directionalLight.position.set(30, 60, 0);
+  directionalLight.target = scene;
+  //const helper = new THREE.DirectionalLightHelper(directionalLight); // just to help - remove later
+  //scene.add(helper);
   scene.add(ambientLight);
+  scene.add(directionalLight);
 }
 
 function createSolidSpotLights(parent) {
@@ -386,6 +393,9 @@ function onKeyUp(e) {
       const idx = parseInt(e.key) - 1;
       isMoveRing[idx] = false;
       break;
+    case 'd':
+    case 'D':
+      directionalLight.visible = directionalLight.visible ? false : true;
   }
 }
 
