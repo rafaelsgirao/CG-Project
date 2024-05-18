@@ -3,7 +3,7 @@ import { ParametricGeometry } from 'three/addons/geometries/ParametricGeometry.j
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import * as Stats from 'three/addons/libs/stats.module.js';
-import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+import { GUI } from 'three/addons/libs/lil-gui.module.min.js';;
 
 //////////////////////
 /* GLOBAL VARIABLES */
@@ -29,7 +29,15 @@ let directionalHelper;
 let lights = new Array();
 let lightsHelpers = new Array();
 
-let enableHelpers = true;
+let enableHelpers = false;
+
+//materials
+const LAMBERT = 1
+const TOON = 2
+const PHONG = 3
+const NORMAL = 4
+let changeMaterial = true;
+let currentMaterial = LAMBERT;
 
 // altura e largura das superficies parametricas
 const h = 3;
@@ -104,6 +112,7 @@ function Ring3DGeometry(outer, inner, height) {
     steps: 2,
     depth: height,
     bevelEnabled: false,
+    segments: segments
   };
 
   var geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
@@ -122,7 +131,8 @@ function Ring3DGeometry(outer, inner, height) {
 
 function cell(u, v, target) {
   // u, v [0, 1] => [-1, 1]
-  u = (u-0.5)*2; v = (v-0.5)*2;
+  u = (u-0.5)*2; 
+  v = (v-0.5)*2;
   target.set(
     v*l,
     ((u**2-v**2)+1)*h,
@@ -131,7 +141,8 @@ function cell(u, v, target) {
 }
 function conicalSurface(u, v, target) {
   // u, v [0, 1] => [-1, 1]
-  u = (u-0.5)*2; v = (v-0.5)*2; 
+  u = (u-0.5)*2; 
+  v = (v-0.5)*2; 
   target.set(
     u*l * Math.cos(Math.PI*v),
     (Math.abs(u))*h,
@@ -140,7 +151,8 @@ function conicalSurface(u, v, target) {
 }
 function cilindricSurface(u, v, target) {
   // u, v [0, 1] => [-1, 1]
-  u = (u-0.5)*2; v = (v-0.5)*2; 
+  u = (u-0.5)*2; 
+  v = (v-0.5)*2; 
   target.set(
     l * Math.cos(Math.PI*v),
     (Math.abs(u))*h,
@@ -149,7 +161,8 @@ function cilindricSurface(u, v, target) {
 }
 function spiral(u, v, target) {
   // u [0, 1] => [-1, 1]; v [0,1] => [0, 3]
-  u = (u-0.5)*2; v = v*3;
+  u = (u-0.5)*2; 
+  v = v*3;
   target.set(
     u*l * Math.cos(Math.PI*v),
     (v/3)*h,
@@ -158,7 +171,8 @@ function spiral(u, v, target) {
 }
 function hourglass(u, v, target) {
   // u, v [0, 1] => [-1, 1]
-  u = (u-0.5)*2; v = (v-0.5)*2;
+  u = (u-0.5)*2; 
+  v = (v-0.5)*2;
   target.set(
     Math.cos(Math.PI*u)*l * Math.cos(Math.PI*v),
     (Math.abs(u))*h,
@@ -167,7 +181,8 @@ function hourglass(u, v, target) {
 }
 function sphericalSurface(u, v, target) {
   // u, v [0, 1] => [-1, 1]
-  u = (u-0.5)*2; v = (v-0.5)*2;
+  u = (u-0.5)*2; 
+  v = (v-0.5)*2;
   target.set(
     h*Math.cos(Math.PI*v)*Math.sin(Math.PI*u),
     h+h*Math.cos(Math.PI*u),
@@ -176,8 +191,10 @@ function sphericalSurface(u, v, target) {
 }
 function torus(u, v, target) {
   // u, v [0, 1] => [-1, 1]
-  u = (u-0.5)*2; v = (v-0.5)*2;
-  let r = 0.3, R =0.75;
+  u = (u-0.5)*2; 
+  v = (v-0.5)*2;
+  const r = 0.3; 
+  const R =0.75;
   target.set(
     h*Math.cos(Math.PI*v)*(R+r*Math.sin(Math.PI*u)),
     2*R+4*r+h*Math.sin(Math.PI*v)*(R+r*Math.sin(Math.PI*u)),
@@ -186,7 +203,8 @@ function torus(u, v, target) {
 }
 function paraboloid(u, v, target) {
   // u, v [0, 1] => [-1, 1]
-  u = (u-0.5)*2; v = (v-0.5)*2;
+  u = (u-0.5)*2; 
+  v = (v-0.5)*2;
   target.set(
     v*l,
     (u**2+v**2)*h,
@@ -249,10 +267,14 @@ function createCarrossel() {
   scene.add(carrossel);
 }
 
-function createCylinder(parent, x, y, z, outer, inner) {
+function createCylinder(parent, x, y, z) {
   const geometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight);
-  const material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: false });
-  let mesh = new THREE.Mesh(geometry, material);
+  const lambertMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000});
+  const toonMaterial = new THREE.MeshToonMaterial({ color: 0xff0000});
+  const phongMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000, shininess: 100, emissive: 0x111111});
+  const normalMaterial = new THREE.MeshNormalMaterial({});
+  const mesh = new THREE.Mesh(geometry);
+  mesh.userData = { lambert: lambertMaterial, toon: toonMaterial, phong: phongMaterial, normal: normalMaterial };
   mesh.position.set(x, y, z);
   parent.add(mesh);
   objectMap.set('cylinder', mesh);
@@ -261,13 +283,16 @@ function createCylinder(parent, x, y, z, outer, inner) {
 
 function createRing(parent, x, y, z, outer, inner, c = 0x101010) {
   const geometry = Ring3DGeometry(outer, inner, ringHeight);
-  const material = new THREE.MeshBasicMaterial({ color: c, wireframe: false });
-  let mesh = new THREE.Mesh(geometry, material);
+  const lambertMaterial = new THREE.MeshLambertMaterial({ color: c});
+  const toonMaterial = new THREE.MeshToonMaterial({ color: c});
+  const phongMaterial = new THREE.MeshPhongMaterial({ color: c, shininess: 100, emissive: 0x111111});
+  const normalMaterial = new THREE.MeshNormalMaterial({ });
+  const mesh = new THREE.Mesh(geometry);
+  mesh.userData = { moveStep: 0, lambert: lambertMaterial, toon: toonMaterial, phong: phongMaterial, normal: normalMaterial };
   for (let i = 0; i < 8; i++) {
     createParametricSolid(mesh, ringHeight/2, (inner + outer)/2, i, 8)    
   }
   mesh.position.set(x, y, z);
-  mesh.userData = {moveStep: 0}
   objectMap.get('rings').push(mesh);
   parent.add(mesh);
 }
@@ -275,8 +300,12 @@ function createRing(parent, x, y, z, outer, inner, c = 0x101010) {
 function createParametricSolid(parent, heightOffset, centerOffset, idx, total) {
   const jdx = (idx+Math.ceil(centerOffset))%8; // shifting of the index value, so the solids on the rings aren't aligned
   const geometry = getParametricGeometry(jdx);
-  const material = new THREE.MeshBasicMaterial( { color: 0xcc1c1c1 >> 2*idx } );
-  const mesh = new THREE.Mesh( geometry, material );
+  const lambertMaterial = new THREE.MeshLambertMaterial({ color: 0xcc1c1c1 >> 2*idx});
+  const toonMaterial = new THREE.MeshToonMaterial({ color: 0xcc1c1c1 >> 2*idx});
+  const phongMaterial = new THREE.MeshPhongMaterial({ color: 0xcc1c1c1 >> 2*idx, shininess: 100, emissive: 0x111111});
+  const normalMaterial = new THREE.MeshNormalMaterial({ });
+  const mesh = new THREE.Mesh(geometry);
+  mesh.userData = { lambert: lambertMaterial, toon: toonMaterial, phong: phongMaterial, normal: normalMaterial }
   const angle = 2*Math.PI/total * idx;
   const x = centerOffset * Math.cos(angle);
   const z = centerOffset * Math.sin(angle);
@@ -312,11 +341,52 @@ function spinSurface(idx, delta) {
   surface.rotateY(angle);
 }
 
+/////////////////////
+/* UPDATE Materials*/
+/////////////////////
+
+function changeMaterials(){
+  const cylinder = objectMap.get('cylinder');
+  const rings = objectMap.get('rings');
+  const surfaces = objectMap.get('surfaces');
+  switch (currentMaterial) {
+    case (LAMBERT):
+      cylinder.material = cylinder.userData.lambert;
+      rings.forEach((ring) => { ring.material = ring.userData.lambert});
+      surfaces.forEach((surface) => { surface.material = surface.userData.lambert});
+      break;
+    case (PHONG):
+      cylinder.material = cylinder.userData.phong;
+      rings.forEach((ring) => { ring.material = ring.userData.phong});
+      surfaces.forEach((surface) => { surface.material = surface.userData.phong});
+      break;
+    case (TOON):
+      cylinder.material = cylinder.userData.toon;
+      rings.forEach((ring) => { ring.material = ring.userData.toon});
+      surfaces.forEach((surface) => { surface.material = surface.userData.toon});
+      break;
+    case (NORMAL):
+      cylinder.material = cylinder.userData.normal;
+      rings.forEach((ring) => { ring.material = ring.userData.normal});
+      surfaces.forEach((surface) => { surface.material = surface.userData.normal});
+      break;
+    default:
+      cylinder.material = cylinder.userData.lambert;
+      rings.forEach((ring) => { ring.material = ring.userData.lambert});
+      surfaces.forEach((surface) => { surface.material = surface.userData.lambert});
+      break;
+  }
+  changeMaterial = false;
+}
+
 ////////////
 /* UPDATE */
 ////////////
 function update() {
   'use strict';
+
+  if (changeMaterial)
+    changeMaterials();
 
   let delta = clock.getDelta();
 
@@ -431,6 +501,26 @@ function onKeyUp(e) {
     case 's':
     case 'S':
       lights.forEach((light) => { light.visible = !light.visible });
+      break;
+    case 'q':
+    case 'Q':
+      currentMaterial = LAMBERT;
+      changeMaterial = true;
+      break;
+    case 'w':
+    case 'W':
+      currentMaterial = PHONG;
+      changeMaterial = true;
+      break;
+    case 'e':
+    case 'E':
+      currentMaterial = TOON;
+      changeMaterial = true;
+      break;
+    case 'r':
+    case 'R':
+      currentMaterial = NORMAL;
+      changeMaterial = true;
       break;
     //disable helpers
     case 'h':
