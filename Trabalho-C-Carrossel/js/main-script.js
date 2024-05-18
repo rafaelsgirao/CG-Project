@@ -31,6 +31,10 @@ let lightsHelpers = new Array();
 
 let enableHelpers = true;
 
+// altura e largura das superficies parametricas
+const h = 3;
+const l = 2;
+
 /////////////////////
 /* CREATE SCENE(S) */
 /////////////////////
@@ -79,79 +83,9 @@ function createSolidSpotLight(parent) {
   lightsHelpers.push(helper);
 }
 
-////////////////////////
-/* CREATE OBJECT3D(S) */
-////////////////////////
-
-function createSkydome() {
-  var geometry = new THREE.SphereGeometry(skydomeRadius);
-  var texture = new THREE.TextureLoader().load("textures/texture.png");
-  var material = new THREE.MeshPhongMaterial({map: texture});
-  var mesh = new THREE.Mesh(geometry, material);
-  mesh.material.side = THREE.BackSide;
-  scene.add(mesh);
-}
-
-function createCarrossel() {
-  const carrossel = new THREE.Object3D();
-  
-  const cylinder = createCylinder(carrossel, 0, 0, 0);
-
-  objectMap.set('rings', new Array());
-  objectMap.set('surfaces', new Array());
-  
-  createRing(cylinder, 0, 0, 0, ring1Radius, cylinderRadius, 0x00ff00);
-  createRing(cylinder, 0, 0, 0, ring2Radius, ring1Radius, 0x00ffff);
-  createRing(cylinder, 0, 0, 0, ring3Radius, ring2Radius, 0x0000ff);
-  
-  scene.add(carrossel);
-}
-
-function createCylinder(parent, x, y, z, outer, inner) {
-  const geometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight);
-  const material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: false });
-  let mesh = new THREE.Mesh(geometry, material);
-  mesh.position.set(x, y, z);
-  
-  parent.add(mesh);
-  objectMap.set('cylinder', mesh);
-  
-  return mesh;
-}
-
-function createRing(parent, x, y, z, outer, inner, c = 0x101010) {
-  const geometry = Ring3DGeometry(outer, inner, ringHeight);
-  const material = new THREE.MeshBasicMaterial({ color: c, wireframe: false });
-
-  let mesh = new THREE.Mesh(geometry, material);
-
-  for (let i = 0; i < 8; i++) {
-    createParametricSolid(mesh, ringHeight/2, (inner + outer)/2, i, 8)    
-  }
-
-  mesh.position.set(x, y, z);
-  mesh.userData = {moveStep: 0}
-  objectMap.get('rings').push(mesh);
-  
-  parent.add(mesh);
-}
-
-function createParametricSolid(parent, heightOffset, centerOffset, idx, total) {
-  const jdx = (idx+Math.ceil(centerOffset))%8; // shifting of the index value, so the solids on the rings aren't aligned
-  const geometry = getParametricGeometry(jdx);
-  const material = new THREE.MeshBasicMaterial( { color: 0xcc1c1c1 >> 2*idx } );
-  const mesh = new THREE.Mesh( geometry, material );
-
-  const angle = 2*Math.PI/total * idx;
-  const x = centerOffset * Math.cos(angle);
-  const z = centerOffset * Math.sin(angle);
-
-  mesh.position.set( x, heightOffset, z);
-  objectMap.get("surfaces").push(mesh);
-  createSolidSpotLight(mesh);
-
-  parent.add(mesh);
-}
+/////////////////////////////////
+/* OBJECT3D(S) HELPER FUNCTIONS*/
+/////////////////////////////////
 
 function Ring3DGeometry(outer, inner, height) {
   var shape = new THREE.Shape();
@@ -178,96 +112,204 @@ function Ring3DGeometry(outer, inner, height) {
   return geometry;
 }
 
-function getParametricGeometry(i) {
-  /*f será uma função tal que f(u,v) = (x,y,z);
+/**
+ * Parametric functions
+ * f(u,v) = (x,y,z);
     com u,v a variar em [0, 1];
     com y >= 0 para não ficar debaixo do anel
-    e com |x|, |z| <= raio dos anéis para não intersetarem com outros sólidos */
+    e com |x|, |z| <= raio dos anéis para não intersetarem com outros sólidos
+ * */
+
+function cell(u, v, target) {
+  // u, v [0, 1] => [-1, 1]
+  u = (u-0.5)*2; v = (v-0.5)*2;
+  target.set(
+    v*l,
+    ((u**2-v**2)+1)*h,
+    u*l
+  );
+}
+function conicalSurface(u, v, target) {
+  // u, v [0, 1] => [-1, 1]
+  u = (u-0.5)*2; v = (v-0.5)*2; 
+  target.set(
+    u*l * Math.cos(Math.PI*v),
+    (Math.abs(u))*h,
+    u*l * Math.sin(Math.PI*v)
+  );
+}
+function cilindricSurface(u, v, target) {
+  // u, v [0, 1] => [-1, 1]
+  u = (u-0.5)*2; v = (v-0.5)*2; 
+  target.set(
+    l * Math.cos(Math.PI*v),
+    (Math.abs(u))*h,
+    l * Math.sin(Math.PI*v)
+  );
+}
+function spiral(u, v, target) {
+  // u [0, 1] => [-1, 1]; v [0,1] => [0, 3]
+  u = (u-0.5)*2; v = v*3;
+  target.set(
+    u*l * Math.cos(Math.PI*v),
+    (v/3)*h,
+    u*l * Math.sin(Math.PI*v)
+  );
+}
+function hourglass(u, v, target) {
+  // u, v [0, 1] => [-1, 1]
+  u = (u-0.5)*2; v = (v-0.5)*2;
+  target.set(
+    Math.cos(Math.PI*u)*l * Math.cos(Math.PI*v),
+    (Math.abs(u))*h,
+    Math.cos(Math.PI*u)*l * Math.sin(Math.PI*v)
+  );
+}
+function sphericalSurface(u, v, target) {
+  // u, v [0, 1] => [-1, 1]
+  u = (u-0.5)*2; v = (v-0.5)*2;
+  target.set(
+    h*Math.cos(Math.PI*v)*Math.sin(Math.PI*u),
+    h+h*Math.cos(Math.PI*u),
+    h*Math.sin(Math.PI*v)*Math.sin(Math.PI*u)
+  );
+}
+function torus(u, v, target) {
+  // u, v [0, 1] => [-1, 1]
+  u = (u-0.5)*2; v = (v-0.5)*2;
+  let r = 0.3, R =0.75;
+  target.set(
+    h*Math.cos(Math.PI*v)*(R+r*Math.sin(Math.PI*u)),
+    2*R+4*r+h*Math.sin(Math.PI*v)*(R+r*Math.sin(Math.PI*u)),
+    h*r*Math.cos(Math.PI*u)
+  );
+}
+function paraboloid(u, v, target) {
+  // u, v [0, 1] => [-1, 1]
+  u = (u-0.5)*2; v = (v-0.5)*2;
+  target.set(
+    v*l,
+    (u**2+v**2)*h,
+    u*l
+  );
+}
+
+function getParametricGeometry(i) {
   let f;
-  const h = 3; const l = 2; // altura e largura
   switch(i%8) {
-    case 1: // sela
-      f = function (u, v, target) {
-        u = (u-0.5)*2; v = (v-0.5)*2; // u, v [0, 1] => [-1, 1]
-        target.set(
-          /*X=*/ v*l,
-          /*Y=*/ ((u**2-v**2)+1)*h,
-          /*Z=*/ u*l
-        );
-      }
+    case 1:
+      f = cell;
       break;
-    case 2: // superficie cónica
-      f = function (u, v, target) {
-        u = (u-0.5)*2; v = (v-0.5)*2; // u, v [0, 1] => [-1, 1]
-        target.set(
-          /*X=*/ u*l * Math.cos(Math.PI*v),
-          /*Y=*/ (Math.abs(u))*h,
-          /*Z=*/ u*l * Math.sin(Math.PI*v)
-        );
-      }
+    case 2:
+      f = conicalSurface;
       break;
-    case 3: // superficie cilíndrica
-      f = function (u, v, target) {
-        u = (u-0.5)*2; v = (v-0.5)*2; // u, v [0, 1] => [-1, 1]
-        target.set(
-          /*X=*/ l * Math.cos(Math.PI*v),
-          /*Y=*/ (Math.abs(u))*h,
-          /*Z=*/ l * Math.sin(Math.PI*v)
-        );
-      }
+    case 3:
+      f = cilindricSurface;
       break;
-    case 4: // espiral
-      f = function (u, v, target) {
-        u = (u-0.5)*2; v = v*3; // u [0, 1] => [-1, 1]; v [0,1] => [0, 3]
-        target.set(
-          /*X=*/ u*l * Math.cos(Math.PI*v),
-          /*Y=*/ (v/3)*h,
-          /*Z=*/ u*l * Math.sin(Math.PI*v)
-        );
-      }
+    case 4:
+      f = spiral;
       break;
-    case 5: // uma cena que parece mais ou menos uma ampulheta
-      f = function (u, v, target) {
-        u = (u-0.5)*2; v = (v-0.5)*2; // u, v [0, 1] => [-1, 1]
-        target.set(
-          /*X=*/ Math.cos(Math.PI*u)*l * Math.cos(Math.PI*v),
-          /*Y=*/ (Math.abs(u))*h,
-          /*Z=*/ Math.cos(Math.PI*u)*l * Math.sin(Math.PI*v)
-        );
-      }
+    case 5:
+      f = hourglass;
       break;
-    case 6: // superfície esférica
-      f = function (u, v, target) {
-        u = (u-0.5)*2; v = (v-0.5)*2; // u, v [0, 1] => [-1, 1]
-        target.set(
-          /*X=*/ h*Math.cos(Math.PI*v)*Math.sin(Math.PI*u),
-          /*Y=*/ h+h*Math.cos(Math.PI*u),
-          /*Z=*/ h*Math.sin(Math.PI*v)*Math.sin(Math.PI*u)
-        );
-      }
+    case 6:
+      f = sphericalSurface;
       break;
-    case 7: // toro
-      f = function (u, v, target) {
-        u = (u-0.5)*2; v = (v-0.5)*2; // u, v [0, 1] => [-1, 1]
-        let r = 0.3, R =0.75;
-        target.set(
-          /*X=*/ h*Math.cos(Math.PI*v)*(R+r*Math.sin(Math.PI*u)),
-          /*Y=*/ 2*R+4*r+h*Math.sin(Math.PI*v)*(R+r*Math.sin(Math.PI*u)),
-          /*Z=*/ h*r*Math.cos(Math.PI*u)
-        );
-      }
+    case 7:
+      f = torus;
       break;
-    default: // paraboloide
-      f = function (u, v, target) {
-        u = (u-0.5)*2; v = (v-0.5)*2; // u, v [0, 1] => [-1, 1]
-        target.set(
-          /*X=*/ v*l,
-          /*Y=*/ (u**2+v**2)*h,
-          /*Z=*/ u*l
-        );
-      };
+    default:
+      f = paraboloid;  
+      break;
   }
   return new ParametricGeometry( f, 25, 25 );
+}
+
+////////////////////////
+/* CREATE OBJECT3D(S) */
+////////////////////////
+
+function createSkydome() {
+  var geometry = new THREE.SphereGeometry(skydomeRadius);
+  var texture = new THREE.TextureLoader().load("textures/texture.png");
+  var material = new THREE.MeshPhongMaterial({map: texture});
+  var mesh = new THREE.Mesh(geometry, material);
+  mesh.material.side = THREE.BackSide;
+  scene.add(mesh);
+}
+
+function createCarrossel() {
+  const carrossel = new THREE.Object3D();
+  const cylinder = createCylinder(carrossel, 0, 0, 0);
+  objectMap.set('rings', new Array());
+  objectMap.set('surfaces', new Array());
+  createRing(cylinder, 0, 0, 0, ring1Radius, cylinderRadius, 0x00ff00);
+  createRing(cylinder, 0, 0, 0, ring2Radius, ring1Radius, 0x00ffff);
+  createRing(cylinder, 0, 0, 0, ring3Radius, ring2Radius, 0x0000ff);
+  scene.add(carrossel);
+}
+
+function createCylinder(parent, x, y, z, outer, inner) {
+  const geometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight);
+  const material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: false });
+  let mesh = new THREE.Mesh(geometry, material);
+  mesh.position.set(x, y, z);
+  parent.add(mesh);
+  objectMap.set('cylinder', mesh);
+  return mesh;
+}
+
+function createRing(parent, x, y, z, outer, inner, c = 0x101010) {
+  const geometry = Ring3DGeometry(outer, inner, ringHeight);
+  const material = new THREE.MeshBasicMaterial({ color: c, wireframe: false });
+  let mesh = new THREE.Mesh(geometry, material);
+  for (let i = 0; i < 8; i++) {
+    createParametricSolid(mesh, ringHeight/2, (inner + outer)/2, i, 8)    
+  }
+  mesh.position.set(x, y, z);
+  mesh.userData = {moveStep: 0}
+  objectMap.get('rings').push(mesh);
+  parent.add(mesh);
+}
+
+function createParametricSolid(parent, heightOffset, centerOffset, idx, total) {
+  const jdx = (idx+Math.ceil(centerOffset))%8; // shifting of the index value, so the solids on the rings aren't aligned
+  const geometry = getParametricGeometry(jdx);
+  const material = new THREE.MeshBasicMaterial( { color: 0xcc1c1c1 >> 2*idx } );
+  const mesh = new THREE.Mesh( geometry, material );
+  const angle = 2*Math.PI/total * idx;
+  const x = centerOffset * Math.cos(angle);
+  const z = centerOffset * Math.sin(angle);
+  mesh.position.set( x, heightOffset, z);
+  objectMap.get("surfaces").push(mesh);
+  createSolidSpotLight(mesh);
+  parent.add(mesh);
+}
+
+///////////////
+/* MOVEMENTS */
+///////////////
+function spinCylinder(delta) {
+  const speed = 0.7;
+  const cylinder = objectMap.get('cylinder');
+  const angle = speed*delta;
+  cylinder.rotateY(angle);
+}
+
+function moveRing(idx, delta) {
+  const speed = 1;
+  const range = 1;
+  const ring = objectMap.get('rings')[idx];
+  ring.userData.moveStep += speed*delta;
+  const distance = range*Math.sin(ring.userData.moveStep + Math.PI/2);
+  ring.position.y += distance;
+}
+
+function spinSurface(idx, delta) {
+  const speed = 1;
+  const surface = objectMap.get('surfaces')[idx];
+  const angle = speed*delta;
+  surface.rotateY(angle);
 }
 
 ////////////
@@ -302,42 +344,22 @@ function update() {
   }
 }
 
-// MOVEMENTS
-
-function spinCylinder(delta) {
-  const speed = 0.7;
-
-  const cylinder = objectMap.get('cylinder');
-  const angle = speed*delta;
-  cylinder.rotateY(angle);
-}
-
-function moveRing(idx, delta) {
-  const speed = 1;
-  const range = 1;
-  
-  const ring = objectMap.get('rings')[idx];
-  ring.userData.moveStep += speed*delta;
-  const distance = range*Math.sin(ring.userData.moveStep + Math.PI/2);
-  ring.position.y += distance;
-}
-
-function spinSurface(idx, delta) {
-  const speed = 1;
-  
-  const surface = objectMap.get('surfaces')[idx];
-  const angle = speed*delta;
-  surface.rotateY(angle);
-}
-
-
 /////////////
 /* DISPLAY */
 /////////////
 function render() {
   'use strict';
-  
   renderer.render(scene, perspectiveCamera);
+}
+
+/////////////////////
+/* ANIMATION CYCLE */
+/////////////////////
+function animate() {
+  'use strict';
+  update();
+  render();
+  requestAnimationFrame(animate);
 }
 
 ////////////////////////////////
@@ -362,18 +384,6 @@ function init() {
   window.addEventListener('resize', onResize);
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
-}
-
-/////////////////////
-/* ANIMATION CYCLE */
-/////////////////////
-function animate() {
-  'use strict';
-
-  update();
-  render();
-
-  requestAnimationFrame(animate);
 }
 
 ////////////////////////////
