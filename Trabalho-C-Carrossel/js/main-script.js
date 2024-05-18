@@ -24,6 +24,12 @@ let cylinderHeight = 50, ringHeight = 20;
 let skydomeRadius = 500;
 
 let directionalLight;
+let directionalHelper;
+
+let lights = new Array();
+let lightsHelpers = new Array();
+
+let enableHelpers = true;
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -54,17 +60,23 @@ function createCameras() {
 
 function createLights() {
   const ambientLight = new THREE.AmbientLight(0xff8000, 0.2);
-  directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  directionalLight = new THREE.DirectionalLight(0xffffff, 1);
   directionalLight.position.set(30, 60, 0);
   directionalLight.target = scene;
-  //const helper = new THREE.DirectionalLightHelper(directionalLight); // just to help - remove later
-  //scene.add(helper);
+  directionalHelper = new THREE.DirectionalLightHelper(directionalLight); // just to help - remove later
   scene.add(ambientLight);
   scene.add(directionalLight);
+  scene.add(directionalHelper);
 }
 
-function createSolidSpotLights(parent) {
-  //TODO
+function createSolidSpotLight(parent) {
+  const spotLight = new THREE.SpotLight(0xffffff, 1);
+  spotLight.target.position.y = 50;
+  const helper = new THREE.SpotLightHelper(spotLight);
+  parent.add(spotLight);
+  parent.add(helper);
+  lights.push(spotLight);
+  lightsHelpers.push(helper);
 }
 
 ////////////////////////
@@ -136,7 +148,7 @@ function createParametricSolid(parent, heightOffset, centerOffset, idx, total) {
 
   mesh.position.set( x, heightOffset, z);
   objectMap.get("surfaces").push(mesh);
-  createSolidSpotLights(mesh);
+  createSolidSpotLight(mesh);
 
   parent.add(mesh);
 }
@@ -279,6 +291,15 @@ function update() {
   for (let idx = 0; idx < objectMap.get('surfaces').length; idx++) {
     spinSurface(idx, delta);
   }
+
+  //helpers - remove later
+  if (enableHelpers) {
+    lightsHelpers.forEach((helper) => { helper.visible = lights.at(0).visible });
+    directionalHelper.visible = directionalLight.visible;
+  } else {
+    lightsHelpers.forEach((helper) => { helper.visible = false });
+    directionalHelper.visible = false;
+  }
 }
 
 // MOVEMENTS
@@ -395,7 +416,16 @@ function onKeyUp(e) {
       break;
     case 'd':
     case 'D':
-      directionalLight.visible = directionalLight.visible ? false : true;
+      directionalLight.visible = !directionalLight.visible;
+      break;
+    case 's':
+    case 'S':
+      lights.forEach((light) => { light.visible = !light.visible });
+      break;
+    //disable helpers
+    case 'h':
+      enableHelpers = !enableHelpers;
+      break;
   }
 }
 
