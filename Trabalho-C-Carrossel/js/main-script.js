@@ -122,11 +122,7 @@ function Ring3DGeometry(outer, inner, height) {
     steps: 2,
     depth: height,
     bevelEnabled: false,
-<<<<<<< HEAD
-    segments: segments,
-=======
     curveSegments: 64
->>>>>>> 4fba6ea (segments functionating)
   };
 
   var geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
@@ -283,7 +279,7 @@ function createSkydome() {
 
 function createCarrossel() {
   const carrossel = new THREE.Object3D();
-  const cylinder = createCylinder(carrossel, 0, 0, 0);
+  const cylinder = createCylinder(carrossel, 0, -cylinderHeight/2, 0);
   objectMap.set('rings', new Array());
   objectMap.set('surfaces', new Array());
   createRing(cylinder, 0, 0.5, 0, ring1Radius, cylinderRadius, 0x00ff00);
@@ -467,6 +463,8 @@ function createMobiusStrip() {
   mesh.rotation.x += Math.PI / 2;
   mesh.rotation.z += Math.PI / 2;
   mesh.position.y = 40;
+
+  mesh.position.y -= cylinderHeight/2;
 
   // Adding the Mobius strip to the scene
   scene.add(mesh);
