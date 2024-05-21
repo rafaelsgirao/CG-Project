@@ -73,10 +73,12 @@ function createCameras() {
 
 function createLights() {
   const ambientLight = new THREE.AmbientLight(0xff8000, 0.1);
-  directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+
+  directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
   directionalLight.position.set(30, 60, 0);
   directionalLight.target = scene;
   directionalHelper = new THREE.DirectionalLightHelper(directionalLight); // just to help - remove later
+  
   scene.add(ambientLight);
   scene.add(directionalLight);
   scene.add(directionalHelper);
@@ -84,8 +86,12 @@ function createLights() {
 
 function createSolidSpotLight(parent) {
   const spotLight = new THREE.SpotLight(0xffffff, 1);
-  spotLight.target.position.y = 50;
+  spotLight.target.position.x = spotLight.position.x;
+  spotLight.target.position.y = spotLight.position.y + 1;
+  spotLight.target.position.z = spotLight.position.z;
+  spotLight.angle = Math.PI/2;
   const helper = new THREE.SpotLightHelper(spotLight);
+
   parent.add(spotLight);
   parent.add(helper);
   lights.push(spotLight);
@@ -688,6 +694,7 @@ function onKeyUp(e) {
 
     //disable helpers
     case 'h':
+    case 'H':
       enableHelpers = !enableHelpers;
       break;
   }
