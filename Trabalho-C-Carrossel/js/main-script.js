@@ -47,7 +47,6 @@ let currentMaterial = LAMBERT;
 // altura e largura das superficies parametricas
 const h = 3;
 const l = 2;
-let mobiusStrip;
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -59,7 +58,7 @@ function createScene() {
   scene.background = new THREE.Color(0xe3d8b7);
   createCarrossel();
   createSkydome();
-  createMobius();
+  createMobiusStrip();
 }
 
 //////////////////////
@@ -68,7 +67,7 @@ function createScene() {
 function createCameras() {
   'use strict';
   perspectiveCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight); //default near and far
-  perspectiveCamera.position.set(50, 80, 100);
+  perspectiveCamera.position.set(50, 110, 120);
   perspectiveCamera.lookAt(scene.position);
   // TODO - implement stero camera for vr
 }
@@ -392,7 +391,7 @@ function createParametricSolid(parent, heightOffset, centerOffset, idx, total) {
   parent.add(mesh);
 }
 
-function createMobius() {
+function createMobiusStrip() {
   const vertices = [
     0.9, 0, -0, 1.1, 0, 0, 0.8241872278871633, 0.36695179592028854, -0.02079116908177593,
     1.0029036873980386, 0.44652149023131177, 0.02079116908177593, 0.6080024837579808,
@@ -433,19 +432,43 @@ function createMobius() {
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(indices, 2));
   geometry.setIndex(indices);
 
-  // Creating material
-  const material = new THREE.MeshBasicMaterial({
-    color: 0xff0000,
+  const materialProps = {
+    color: 0xc0c0c0,
     side: THREE.DoubleSide,
-    wireframe: false,
-  });
+    //wireframe: false,
+  };
 
-  // Creating the mesh
-  mobiusStrip = new THREE.Mesh(geometry, material);
+  const lambertMaterial = new THREE.MeshLambertMaterial(materialProps);
 
-  mobiusStrip.scale.set(100, 100, 100);
+  const toonMaterial = new THREE.MeshToonMaterial(materialProps);
+
+  const phongMaterial = new THREE.MeshPhongMaterial(materialProps);
+
+  const normalMaterial = new THREE.MeshNormalMaterial(materialProps);
+
+  const basicMaterial = new THREE.MeshBasicMaterial(materialProps);
+
+  // Creating the Mobius strip (mesh)
+  const mesh = new THREE.Mesh(geometry, lambertMaterial);
+
+  mesh.userData = {
+    lambert: lambertMaterial,
+    toon: toonMaterial,
+    phong: phongMaterial,
+    normal: normalMaterial,
+    basic: basicMaterial,
+  };
+
+  mesh.scale.set(50, 50, 50);
+
+  // Rotate the Möbius strip for some animation
+  mesh.rotation.x += Math.PI / 2;
+  mesh.rotation.z += Math.PI / 2;
+  mesh.position.y = 40;
+
   // Adding the Mobius strip to the scene
-  scene.add(mobiusStrip);
+  scene.add(mesh);
+  objectMap.set('mobiusStrip', mesh);
 }
 
 ///////////////
@@ -481,6 +504,7 @@ function changeMaterials() {
   const rings = objectMap.get('rings');
   const surfaces = objectMap.get('surfaces');
   const skydome = objectMap.get('skydome');
+  const mobiusStrip = objectMap.get('mobiusStrip');
 
   switch (currentMaterial) {
     case LAMBERT:
@@ -488,6 +512,8 @@ function changeMaterials() {
       skydome.material.normalNeedsUpdate = true;
       cylinder.material = cylinder.userData.lambert;
       cylinder.material.normalNeedsUpdate = true;
+      mobiusStrip.material = mobiusStrip.userData.lambert;
+      mobiusStrip.material.normalNeedsUpdate = true;
       rings.forEach((ring) => {
         ring.material = ring.userData.lambert;
         ring.material.normalNeedsUpdate = true;
@@ -503,6 +529,8 @@ function changeMaterials() {
       skydome.material.normalNeedsUpdate = true;
       cylinder.material = cylinder.userData.phong;
       cylinder.material.normalNeedsUpdate = true;
+      mobiusStrip.material = mobiusStrip.userData.phong;
+      mobiusStrip.material.normalNeedsUpdate = true;
       rings.forEach((ring) => {
         ring.material = ring.userData.phong;
         ring.material.normalNeedsUpdate = true;
@@ -518,6 +546,8 @@ function changeMaterials() {
       skydome.material.normalNeedsUpdate = true;
       cylinder.material = cylinder.userData.toon;
       cylinder.material.normalNeedsUpdate = true;
+      mobiusStrip.material = mobiusStrip.userData.toon;
+      mobiusStrip.material.normalNeedsUpdate = true;
       rings.forEach((ring) => {
         ring.material = ring.userData.toon;
         ring.material.normalNeedsUpdate = true;
@@ -533,6 +563,8 @@ function changeMaterials() {
       skydome.material.normalNeedsUpdate = true;
       cylinder.material = cylinder.userData.normal;
       cylinder.material.normalNeedsUpdate = true;
+      mobiusStrip.material = mobiusStrip.userData.normal;
+      mobiusStrip.material.normalNeedsUpdate = true;
       rings.forEach((ring) => {
         ring.material = ring.userData.normal;
         ring.material.normalNeedsUpdate = true;
@@ -548,6 +580,8 @@ function changeMaterials() {
       skydome.material.normalNeedsUpdate = true;
       cylinder.material = cylinder.userData.lambert;
       cylinder.material.normalNeedsUpdate = true;
+      mobiusStrip.material = mobiusStrip.userData.lambert;
+      mobiusStrip.material.normalNeedsUpdate = true;
       rings.forEach((ring) => {
         ring.material = ring.userData.lambert;
         ring.material.normalNeedsUpdate = true;
@@ -566,11 +600,14 @@ function turnOffMaterials() {
   const rings = objectMap.get('rings');
   const surfaces = objectMap.get('surfaces');
   const skydome = objectMap.get('skydome');
+  const mobiusStrip = objectMap.get('mobiusStrip');
 
   skydome.material = skydome.userData.basic;
   skydome.material.normalNeedsUpdate = true;
   cylinder.material = cylinder.userData.basic;
   cylinder.material.normalNeedsUpdate = true;
+  mobiusStrip.material = mobiusStrip.userData.basic;
+  mobiusStrip.material.normalNeedsUpdate = true;
   rings.forEach((ring) => {
     ring.material = ring.userData.basic;
     ring.material.normalNeedsUpdate = true;
@@ -609,10 +646,6 @@ function update() {
   for (let idx = 0; idx < objectMap.get('surfaces').length; idx++) {
     spinSurface(idx, delta);
   }
-
-  // Rotate the Möbius strip for some animation
-  mobiusStrip.rotation.x += 0.01;
-  mobiusStrip.rotation.y += 0.01;
 
   //helpers - remove later
   if (enableHelpers) {
