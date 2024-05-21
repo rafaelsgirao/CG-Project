@@ -130,7 +130,7 @@ function Ring3DGeometry(outer, inner, height) {
     e com |x|, |z| <= raio dos anéis para não intersetarem com outros sólidos
  * */
 
-function cell(u, v, target) {
+function saddle(u, v, target) {
   // u, v [0, 1] => [-1, 1]
   u = (u-0.5)*2; 
   v = (v-0.5)*2;
@@ -145,8 +145,8 @@ function conicalSurface(u, v, target) {
   u = (u-0.5)*2; 
   v = (v-0.5)*2; 
   target.set(
-    u*l * Math.cos(Math.PI*v),
     (Math.abs(u))*h,
+    u*l * Math.cos(Math.PI*v) + l,
     u*l * Math.sin(Math.PI*v)
   );
 }
@@ -155,8 +155,8 @@ function cilindricSurface(u, v, target) {
   u = (u-0.5)*2; 
   v = (v-0.5)*2; 
   target.set(
-    l * Math.cos(Math.PI*v),
     (Math.abs(u))*h,
+    l * Math.cos(Math.PI*v) + l,
     l * Math.sin(Math.PI*v)
   );
 }
@@ -175,8 +175,8 @@ function hourglass(u, v, target) {
   u = (u-0.5)*2; 
   v = (v-0.5)*2;
   target.set(
-    Math.cos(Math.PI*u)*l * Math.cos(Math.PI*v),
     (Math.abs(u))*h,
+    Math.cos(Math.PI*u)*l * Math.cos(Math.PI*v) + l,
     Math.cos(Math.PI*u)*l * Math.sin(Math.PI*v)
   );
 }
@@ -217,7 +217,7 @@ function getParametricGeometry(i) {
   let f;
   switch(i%8) {
     case 1:
-      f = cell;
+      f = saddle;
       break;
     case 2:
       f = conicalSurface;
@@ -357,15 +357,17 @@ function createParametricSolid(parent, heightOffset, centerOffset, idx, total) {
   const jdx = (idx+Math.ceil(centerOffset))%8; // shifting of the index value, so the solids on the rings aren't aligned
   const geometry = getParametricGeometry(jdx);
 
-  const lambertMaterial = new THREE.MeshLambertMaterial({ color: 0xcc1c1c1 >> 2*idx});
+  let colour = Math.random()*16**6
 
-  const toonMaterial = new THREE.MeshToonMaterial({ color: 0xcc1c1c1 >> 2*idx});
+  const lambertMaterial = new THREE.MeshLambertMaterial({ color: colour});
 
-  const phongMaterial = new THREE.MeshPhongMaterial({ color: 0xcc1c1c1 >> 2*idx});
+  const toonMaterial = new THREE.MeshToonMaterial({ color: colour});
+
+  const phongMaterial = new THREE.MeshPhongMaterial({ color: colour});
 
   const normalMaterial = new THREE.MeshNormalMaterial({ });
 
-  const basicMaterial = new THREE.MeshBasicMaterial({ color: 0xcc1c1c1 >> 2*idx});
+  const basicMaterial = new THREE.MeshBasicMaterial({ color: colour});
 
   const mesh = new THREE.Mesh(geometry);
   mesh.userData = { 
@@ -373,7 +375,9 @@ function createParametricSolid(parent, heightOffset, centerOffset, idx, total) {
     toon: toonMaterial, 
     phong: phongMaterial, 
     normal: normalMaterial,
-    basic: basicMaterial 
+    basic: basicMaterial, 
+
+    rotDirection: (centerOffset*idx%2) * 2 -1
   };
 
   const angle = 2*Math.PI/total * idx;
@@ -408,7 +412,7 @@ function moveRing(idx, delta) {
 function spinSurface(idx, delta) {
   const speed = 1;
   const surface = objectMap.get('surfaces')[idx];
-  const angle = speed*delta;
+  const angle = speed*delta*surface.userData.rotDirection;
   surface.rotateY(angle);
 }
 
