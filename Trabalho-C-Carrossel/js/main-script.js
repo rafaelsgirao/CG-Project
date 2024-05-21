@@ -40,6 +40,7 @@ const LAMBERT = 1;
 const TOON = 2;
 const PHONG = 3;
 const NORMAL = 4;
+const BASIC = 5;
 let materialsOff = false;
 let changeMaterial = true;
 let currentMaterial = LAMBERT;
@@ -77,9 +78,9 @@ function createCameras() {
 /////////////////////
 
 function createLights() {
-  const ambientLight = new THREE.AmbientLight(0xff8000, 0.1);
+  const ambientLight = new THREE.AmbientLight(0xff8000, 0.4);
 
-  directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
   directionalLight.position.set(30, 60, 0);
   directionalLight.target = scene;
   directionalHelper = new THREE.DirectionalLightHelper(directionalLight); // just to help - remove later
@@ -241,37 +242,44 @@ function getParametricGeometry(i) {
   return new ParametricGeometry(f, 25, 25);
 }
 
+function createMaterials(color = null, texture = null, side = null,  mesh) {
+  const lambertMaterial = new THREE.MeshLambertMaterial({ color: color });
+  if (texture) lambertMaterial.map = texture;
+  if (side) lambertMaterial.side = side;
+  
+  const toonMaterial = new THREE.MeshToonMaterial({ color: color });
+  if (texture) toonMaterial.map = texture;
+  if (side) toonMaterial.side = side;
+
+  const phongMaterial = new THREE.MeshPhongMaterial({ color: color });
+  if (texture) phongMaterial.map = texture;
+  if (side) phongMaterial.side = side;
+
+  const normalMaterial = new THREE.MeshNormalMaterial({});
+  if (side) normalMaterial.side = side;
+
+  const basicMaterial = new THREE.MeshBasicMaterial({ color: color });
+  if (texture) basicMaterial.map = texture;
+  if (side) basicMaterial.side = side;
+
+  mesh.userData[LAMBERT] = lambertMaterial;
+  mesh.userData[TOON] = toonMaterial;
+  mesh.userData[PHONG] = phongMaterial;
+  mesh.userData[NORMAL] = normalMaterial;
+  mesh.userData[BASIC] = basicMaterial;
+}
+
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
 
 function createSkydome() {
-  var geometry = new THREE.SphereGeometry(skydomeRadius);
-  var texture = new THREE.TextureLoader().load('textures/texture.png');
+  const geometry = new THREE.SphereGeometry(skydomeRadius);
+  const texture = new THREE.TextureLoader().load('textures/texture.png');
 
-  const lambertMaterial = new THREE.MeshLambertMaterial({ map: texture });
-  lambertMaterial.side = THREE.BackSide;
+  const mesh = new THREE.Mesh(geometry);
 
-  const toonMaterial = new THREE.MeshToonMaterial({ map: texture });
-  toonMaterial.side = THREE.BackSide;
-
-  const phongMaterial = new THREE.MeshPhongMaterial({ map: texture });
-  phongMaterial.side = THREE.BackSide;
-
-  const normalMaterial = new THREE.MeshNormalMaterial({});
-  normalMaterial.side = THREE.BackSide;
-
-  const basicMaterial = new THREE.MeshBasicMaterial({ map: texture });
-  basicMaterial.side = THREE.BackSide;
-
-  var mesh = new THREE.Mesh(geometry);
-  mesh.userData = {
-    lambert: lambertMaterial,
-    toon: toonMaterial,
-    phong: phongMaterial,
-    normal: normalMaterial,
-    basic: basicMaterial,
-  };
+  createMaterials(null, texture, THREE.BackSide, mesh);
 
   objectMap.set('skydome', mesh);
   scene.add(mesh);
@@ -279,37 +287,24 @@ function createSkydome() {
 
 function createCarrossel() {
   const carrossel = new THREE.Object3D();
+
   const cylinder = createCylinder(carrossel, 0, -cylinderHeight/2, 0);
+
   objectMap.set('rings', new Array());
   objectMap.set('surfaces', new Array());
+
   createRing(cylinder, 0, 0.5, 0, ring1Radius, cylinderRadius, 0x00ff00);
   createRing(cylinder, 0, 1, 0, ring2Radius, ring1Radius, 0x00ffff);
   createRing(cylinder, 0, 1.5, 0, ring3Radius, ring2Radius, 0x0000ff);
+
   scene.add(carrossel);
 }
 
 function createCylinder(parent, x, y, z) {
   const geometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight);
 
-  const lambertMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-
-  const toonMaterial = new THREE.MeshToonMaterial({ color: 0xff0000 });
-
-  const phongMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
-
-  const normalMaterial = new THREE.MeshNormalMaterial({});
-
-  const basicMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-
   const mesh = new THREE.Mesh(geometry);
-  mesh.userData = {
-    lambert: lambertMaterial,
-    toon: toonMaterial,
-    phong: phongMaterial,
-    normal: normalMaterial,
-    basic: basicMaterial,
-  };
-
+  createMaterials(0xff0000, null, null, mesh);
   mesh.position.set(x, y, z);
 
   parent.add(mesh);
@@ -320,25 +315,10 @@ function createCylinder(parent, x, y, z) {
 function createRing(parent, x, y, z, outer, inner, c = 0x101010) {
   const geometry = Ring3DGeometry(outer, inner, ringHeight);
 
-  const lambertMaterial = new THREE.MeshLambertMaterial({ color: c });
-
-  const toonMaterial = new THREE.MeshToonMaterial({ color: c });
-
-  const phongMaterial = new THREE.MeshPhongMaterial({ color: c });
-
-  const normalMaterial = new THREE.MeshNormalMaterial({});
-
-  const basicMaterial = new THREE.MeshBasicMaterial({ color: c });
-
   const mesh = new THREE.Mesh(geometry);
-  mesh.userData = {
-    moveStep: y,
-    lambert: lambertMaterial,
-    toon: toonMaterial,
-    phong: phongMaterial,
-    normal: normalMaterial,
-    basic: basicMaterial,
-  };
+
+  createMaterials(c, null, null, mesh);
+  mesh.userData.moveStep = y;
 
   for (let i = 0; i < 8; i++) {
     createParametricSolid(mesh, ringHeight / 2, (inner + outer) / 2, i, 8);
@@ -353,34 +333,16 @@ function createRing(parent, x, y, z, outer, inner, c = 0x101010) {
 function createParametricSolid(parent, heightOffset, centerOffset, idx, total) {
   const jdx = (idx + Math.ceil(centerOffset)) % 8; // shifting of the index value, so the solids on the rings aren't aligned
   const geometry = getParametricGeometry(jdx);
-
   let colour = Math.random()*16**6
 
-  const lambertMaterial = new THREE.MeshLambertMaterial({ color: colour});
-
-  const toonMaterial = new THREE.MeshToonMaterial({ color: colour});
-
-  const phongMaterial = new THREE.MeshPhongMaterial({ color: colour});
-
-  const normalMaterial = new THREE.MeshNormalMaterial({});
-
-  const basicMaterial = new THREE.MeshBasicMaterial({ color: colour});
-
   const mesh = new THREE.Mesh(geometry);
-  mesh.userData = {
-    lambert: lambertMaterial,
-    toon: toonMaterial,
-    phong: phongMaterial,
-    normal: normalMaterial,
-    basic: basicMaterial, 
 
-    rotDirection: (centerOffset*idx%2) * 2 -1
-  };
+  createMaterials(colour, null, null, mesh);
+  mesh.userData.rotDirection = (centerOffset*idx%2) * 2 -1;
 
   const angle = ((2 * Math.PI) / total) * idx;
   const x = centerOffset * Math.cos(angle);
   const z = centerOffset * Math.sin(angle);
-
   mesh.position.set(x, heightOffset, z);
 
   createSolidSpotLight(mesh);
@@ -430,32 +392,10 @@ function createMobiusStrip() {
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(indices, 2));
   geometry.setIndex(indices);
 
-  const materialProps = {
-    color: 0xc0c0c0,
-    side: THREE.DoubleSide,
-    //wireframe: false,
-  };
-
-  const lambertMaterial = new THREE.MeshLambertMaterial(materialProps);
-
-  const toonMaterial = new THREE.MeshToonMaterial(materialProps);
-
-  const phongMaterial = new THREE.MeshPhongMaterial(materialProps);
-
-  const normalMaterial = new THREE.MeshNormalMaterial(materialProps);
-
-  const basicMaterial = new THREE.MeshBasicMaterial(materialProps);
-
   // Creating the Mobius strip (mesh)
-  const mesh = new THREE.Mesh(geometry, lambertMaterial);
+  const mesh = new THREE.Mesh(geometry);
 
-  mesh.userData = {
-    lambert: lambertMaterial,
-    toon: toonMaterial,
-    phong: phongMaterial,
-    normal: normalMaterial,
-    basic: basicMaterial,
-  };
+  createMaterials(0xc0c0c0, null, THREE.DoubleSide, mesh);
 
   mesh.scale.set(50, 50, 50);
 
@@ -463,7 +403,6 @@ function createMobiusStrip() {
   mesh.rotation.x += Math.PI / 2;
   mesh.rotation.z += Math.PI / 2;
   mesh.position.y = 40;
-
   mesh.position.y -= cylinderHeight/2;
 
   // Adding the Mobius strip to the scene
@@ -506,114 +445,24 @@ function changeMaterials() {
   const skydome = objectMap.get('skydome');
   const mobiusStrip = objectMap.get('mobiusStrip');
 
-  switch (currentMaterial) {
-    case LAMBERT:
-      skydome.material = skydome.userData.lambert;
-      skydome.material.normalNeedsUpdate = true;
-      cylinder.material = cylinder.userData.lambert;
-      cylinder.material.normalNeedsUpdate = true;
-      mobiusStrip.material = mobiusStrip.userData.lambert;
-      mobiusStrip.material.normalNeedsUpdate = true;
-      rings.forEach((ring) => {
-        ring.material = ring.userData.lambert;
-        ring.material.normalNeedsUpdate = true;
-      });
-      surfaces.forEach((surface) => {
-        surface.material = surface.userData.lambert;
-        surface.material.normalNeedsUpdate = true;
-      });
-      break;
+  const next = materialsOff ? BASIC : currentMaterial;
 
-    case PHONG:
-      skydome.material = skydome.userData.phong;
-      skydome.material.normalNeedsUpdate = true;
-      cylinder.material = cylinder.userData.phong;
-      cylinder.material.normalNeedsUpdate = true;
-      mobiusStrip.material = mobiusStrip.userData.phong;
-      mobiusStrip.material.normalNeedsUpdate = true;
-      rings.forEach((ring) => {
-        ring.material = ring.userData.phong;
-        ring.material.normalNeedsUpdate = true;
-      });
-      surfaces.forEach((surface) => {
-        surface.material = surface.userData.phong;
-        surface.material.normalNeedsUpdate = true;
-      });
-      break;
-
-    case TOON:
-      skydome.material = skydome.userData.toon;
-      skydome.material.normalNeedsUpdate = true;
-      cylinder.material = cylinder.userData.toon;
-      cylinder.material.normalNeedsUpdate = true;
-      mobiusStrip.material = mobiusStrip.userData.toon;
-      mobiusStrip.material.normalNeedsUpdate = true;
-      rings.forEach((ring) => {
-        ring.material = ring.userData.toon;
-        ring.material.normalNeedsUpdate = true;
-      });
-      surfaces.forEach((surface) => {
-        surface.material = surface.userData.toon;
-        surface.material.normalNeedsUpdate = true;
-      });
-      break;
-
-    case NORMAL:
-      skydome.material = skydome.userData.normal;
-      skydome.material.normalNeedsUpdate = true;
-      cylinder.material = cylinder.userData.normal;
-      cylinder.material.normalNeedsUpdate = true;
-      mobiusStrip.material = mobiusStrip.userData.normal;
-      mobiusStrip.material.normalNeedsUpdate = true;
-      rings.forEach((ring) => {
-        ring.material = ring.userData.normal;
-        ring.material.normalNeedsUpdate = true;
-      });
-      surfaces.forEach((surface) => {
-        surface.material = surface.userData.normal;
-        surface.material.normalNeedsUpdate = true;
-      });
-      break;
-
-    default:
-      skydome.material = skydome.userData.lambert;
-      skydome.material.normalNeedsUpdate = true;
-      cylinder.material = cylinder.userData.lambert;
-      cylinder.material.normalNeedsUpdate = true;
-      mobiusStrip.material = mobiusStrip.userData.lambert;
-      mobiusStrip.material.normalNeedsUpdate = true;
-      rings.forEach((ring) => {
-        ring.material = ring.userData.lambert;
-        ring.material.normalNeedsUpdate = true;
-      });
-      surfaces.forEach((surface) => {
-        surface.material = surface.userData.lambert;
-        surface.material.normalNeedsUpdate = true;
-      });
-      break;
-  }
-  changeMaterial = false;
-}
-
-function turnOffMaterials() {
-  const cylinder = objectMap.get('cylinder');
-  const rings = objectMap.get('rings');
-  const surfaces = objectMap.get('surfaces');
-  const skydome = objectMap.get('skydome');
-  const mobiusStrip = objectMap.get('mobiusStrip');
-
-  skydome.material = skydome.userData.basic;
+  skydome.material = skydome.userData[next];
   skydome.material.normalNeedsUpdate = true;
-  cylinder.material = cylinder.userData.basic;
+
+  cylinder.material = cylinder.userData[next];
   cylinder.material.normalNeedsUpdate = true;
-  mobiusStrip.material = mobiusStrip.userData.basic;
+
+  mobiusStrip.material = mobiusStrip.userData[next];
   mobiusStrip.material.normalNeedsUpdate = true;
+
   rings.forEach((ring) => {
-    ring.material = ring.userData.basic;
+    ring.material = ring.userData[next];
     ring.material.normalNeedsUpdate = true;
   });
+
   surfaces.forEach((surface) => {
-    surface.material = surface.userData.basic;
+    surface.material = surface.userData[next];
     surface.material.normalNeedsUpdate = true;
   });
 
@@ -626,10 +475,8 @@ function turnOffMaterials() {
 function update() {
   'use strict';
 
-  if (changeMaterial) {
-    if (materialsOff) turnOffMaterials();
-    else changeMaterials();
-  }
+  if (changeMaterial)
+    changeMaterials();
 
   let delta = clock.getDelta();
 
