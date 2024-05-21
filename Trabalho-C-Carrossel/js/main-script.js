@@ -110,8 +110,6 @@ function createSolidSpotLight(parent) {
 function Ring3DGeometry(outer, inner, height) {
   var shape = new THREE.Shape();
 
-  const segments = 64; // Number of segments to use for the shape
-
   // Create the outer ring
   shape.absarc(0, 0, outer, 0, Math.PI * 2, false);
 
@@ -124,7 +122,11 @@ function Ring3DGeometry(outer, inner, height) {
     steps: 2,
     depth: height,
     bevelEnabled: false,
+<<<<<<< HEAD
     segments: segments,
+=======
+    curveSegments: 64
+>>>>>>> 4fba6ea (segments functionating)
   };
 
   var geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
