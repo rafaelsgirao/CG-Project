@@ -94,7 +94,7 @@ function createSolidSpotLight(parent) {
   spotLight.target.position.x = spotLight.position.x;
   spotLight.target.position.y = spotLight.position.y + 1;
   spotLight.target.position.z = spotLight.position.z;
-  spotLight.angle = Math.PI / 2;
+  spotLight.angle = Math.PI / 4;
   const helper = new THREE.SpotLightHelper(spotLight);
 
   parent.add(spotLight);
@@ -392,6 +392,7 @@ function createMobiusStrip() {
   mesh.position.y = 40;
   mesh.position.y -= cylinderHeight/2;
 
+  mesh.geometry.computeVertexNormals();
   // Adding the Mobius strip to the scene
   scene.add(mesh);
   objectMap.set('mobiusStrip', mesh);
