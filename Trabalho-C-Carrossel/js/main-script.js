@@ -152,7 +152,7 @@ function conicalSurface(u, v, target) {
   u = (u-0.5)*2; 
   v = (v-0.5)*2; 
   target.set(
-    (Math.abs(u))*h,
+    (Math.abs(u))*h - h/2,
     u*l * Math.cos(Math.PI*v) + l,
     u*l * Math.sin(Math.PI*v)
   );
@@ -162,7 +162,7 @@ function cilindricSurface(u, v, target) {
   u = (u-0.5)*2; 
   v = (v-0.5)*2; 
   target.set(
-    (Math.abs(u))*h,
+    (Math.abs(u))*h - h/2,
     l * Math.cos(Math.PI*v) + l,
     l * Math.sin(Math.PI*v)
   );
@@ -178,7 +178,7 @@ function hourglass(u, v, target) {
   u = (u - 0.5) * 2;
   v = (v - 0.5) * 2;
   target.set(
-    (Math.abs(u))*h,
+    (Math.abs(u))*h - h/2,
     Math.cos(Math.PI*u)*l * Math.cos(Math.PI*v) + l,
     Math.cos(Math.PI*u)*l * Math.sin(Math.PI*v)
   );
