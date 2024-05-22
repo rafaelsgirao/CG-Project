@@ -67,6 +67,10 @@ function createScene() {
 function createCameras() {
   'use strict';
   perspectiveCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight); //default near and far
+
+  //TODO: remove later. noclip cheatcode
+  const controls = new OrbitControls(perspectiveCamera, renderer.domElement);
+  controls.update();
   perspectiveCamera.position.set(50, 110, 120);
   perspectiveCamera.lookAt(scene.position);
   // TODO - implement stero camera for vr
@@ -84,6 +88,14 @@ function createLights() {
   directionalLight.target = scene;
   directionalHelper = new THREE.DirectionalLightHelper(directionalLight); // just to help - remove later
 
+  const mobiusStrip = objectMap.get('mobiusStrip');
+
+  console.log(mobiusStrip);
+
+  for (let i = 0; i < 8; i++) {
+    //TODO: make these consts
+    createMobiusStripLight(mobiusStrip, 50, i, 8);
+  }
   scene.add(ambientLight);
   scene.add(directionalLight);
   scene.add(directionalHelper);
@@ -102,6 +114,23 @@ function createSolidSpotLight(parent) {
   lights.push(spotLight);
   lightsHelpers.push(helper);
 }
+
+const createMobiusStripLight = (parent, centerOffset, idx, total) => {
+  const light = new THREE.PointLight(0xff0000, 100, 0);
+
+  const angle = ((2 * Math.PI) / total) * idx;
+  const x = centerOffset * Math.cos(angle);
+  const z = centerOffset * Math.sin(angle);
+  light.position.set(x, 5, z);
+
+  const helper = new THREE.PointLightHelper(light, 5);
+
+  parent.add(light);
+
+  parent.add(helper);
+  lights.push(light);
+  lightsHelpers.push(helper);
+};
 
 /////////////////////////////////
 /* OBJECT3D(S) HELPER FUNCTIONS*/
@@ -386,7 +415,7 @@ function createMobiusStrip() {
 
   mesh.scale.set(50, 50, 50);
 
-  // Rotate the Möbius strip for some animation
+  // Rotate the Möbius strip
   mesh.rotation.x += Math.PI / 2;
   mesh.rotation.z += Math.PI / 2;
   mesh.position.y = 40;
