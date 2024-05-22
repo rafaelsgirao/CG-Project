@@ -116,18 +116,17 @@ function createSolidSpotLight(parent) {
 }
 
 const createMobiusStripLight = (parent, centerOffset, idx, total) => {
-  const light = new THREE.PointLight(0xff0000, 100, 0);
+  const light = new THREE.PointLight(0xffffff, 100, 0);
 
   const angle = ((2 * Math.PI) / total) * idx;
   const x = centerOffset * Math.cos(angle);
   const z = centerOffset * Math.sin(angle);
-  light.position.set(x, 5, z);
+  light.position.set(x, 25, z);
 
   const helper = new THREE.PointLightHelper(light, 5);
 
-  parent.add(light);
-
-  parent.add(helper);
+  scene.add(light);
+  scene.add(helper);
   lights.push(light);
   lightsHelpers.push(helper);
 };
@@ -151,7 +150,7 @@ function Ring3DGeometry(outer, inner, height) {
     steps: 2,
     depth: height,
     bevelEnabled: false,
-    curveSegments: 64
+    curveSegments: 64,
   };
 
   var geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
@@ -176,23 +175,19 @@ function saddle(u, v, target) {
 }
 function conicalSurface(u, v, target) {
   // u, v [0, 1] => [-1, 1]
-  u = (u-0.5)*2; 
-  v = (v-0.5)*2; 
+  u = (u - 0.5) * 2;
+  v = (v - 0.5) * 2;
   target.set(
-    (Math.abs(u))*h - h/2,
-    u*l * Math.cos(Math.PI*v) + l,
-    u*l * Math.sin(Math.PI*v)
+    Math.abs(u) * h - h / 2,
+    u * l * Math.cos(Math.PI * v) + l,
+    u * l * Math.sin(Math.PI * v)
   );
 }
 function cilindricSurface(u, v, target) {
   // u, v [0, 1] => [-1, 1]
-  u = (u-0.5)*2; 
-  v = (v-0.5)*2; 
-  target.set(
-    (Math.abs(u))*h - h/2,
-    l * Math.cos(Math.PI*v) + l,
-    l * Math.sin(Math.PI*v)
-  );
+  u = (u - 0.5) * 2;
+  v = (v - 0.5) * 2;
+  target.set(Math.abs(u) * h - h / 2, l * Math.cos(Math.PI * v) + l, l * Math.sin(Math.PI * v));
 }
 function spiral(u, v, target) {
   // u [0, 1] => [-1, 1]; v [0,1] => [0, 3]
@@ -205,9 +200,9 @@ function hourglass(u, v, target) {
   u = (u - 0.5) * 2;
   v = (v - 0.5) * 2;
   target.set(
-    (Math.abs(u))*h - h/2,
-    Math.cos(Math.PI*u)*l * Math.cos(Math.PI*v) + l,
-    Math.cos(Math.PI*u)*l * Math.sin(Math.PI*v)
+    Math.abs(u) * h - h / 2,
+    Math.cos(Math.PI * u) * l * Math.cos(Math.PI * v) + l,
+    Math.cos(Math.PI * u) * l * Math.sin(Math.PI * v)
   );
 }
 function sphericalSurface(u, v, target) {
@@ -270,16 +265,23 @@ function getParametricGeometry(i) {
   return new ParametricGeometry(f, 25, 25);
 }
 
-function createMaterials(mesh, color = null, texture = null, side = null, shininess = 100, specular = null) {
+function createMaterials(
+  mesh,
+  color = null,
+  texture = null,
+  side = null,
+  shininess = 100,
+  specular = null
+) {
   const lambertMaterial = new THREE.MeshLambertMaterial({ color: color });
   if (texture) lambertMaterial.map = texture;
   if (side) lambertMaterial.side = side;
-  
+
   const toonMaterial = new THREE.MeshToonMaterial({ color: color });
   if (texture) toonMaterial.map = texture;
   if (side) toonMaterial.side = side;
 
-  const phongMaterial = new THREE.MeshPhongMaterial({ color: color});
+  const phongMaterial = new THREE.MeshPhongMaterial({ color: color });
   if (texture) phongMaterial.map = texture;
   if (side) phongMaterial.side = side;
   if (shininess) phongMaterial.shininess = shininess;
@@ -319,7 +321,7 @@ function createSkydome() {
 function createCarrossel() {
   const carrossel = new THREE.Object3D();
 
-  const cylinder = createCylinder(carrossel, 0, -cylinderHeight/2, 0);
+  const cylinder = createCylinder(carrossel, 0, -cylinderHeight / 2, 0);
 
   objectMap.set('rings', new Array());
   objectMap.set('surfaces', new Array());
@@ -364,12 +366,12 @@ function createRing(parent, x, y, z, outer, inner, c = 0x101010) {
 function createParametricSolid(parent, heightOffset, centerOffset, idx, total) {
   const jdx = (idx + Math.ceil(centerOffset)) % 8; // shifting of the index value, so the solids on the rings aren't aligned
   const geometry = getParametricGeometry(jdx);
-  let colour = Math.random()*16**6
+  let colour = Math.random() * 16 ** 6;
 
   const mesh = new THREE.Mesh(geometry);
 
   createMaterials(mesh, colour);
-  mesh.userData.rotDirection = (centerOffset*idx%2) * 2 -1;
+  mesh.userData.rotDirection = ((centerOffset * idx) % 2) * 2 - 1;
 
   const angle = ((2 * Math.PI) / total) * idx;
   const x = centerOffset * Math.cos(angle);
@@ -419,7 +421,7 @@ function createMobiusStrip() {
   mesh.rotation.x += Math.PI / 2;
   mesh.rotation.z += Math.PI / 2;
   mesh.position.y = 40;
-  mesh.position.y -= cylinderHeight/2;
+  mesh.position.y -= cylinderHeight / 2;
 
   mesh.geometry.computeVertexNormals();
   // Adding the Mobius strip to the scene
@@ -492,8 +494,7 @@ function changeMaterials() {
 function update() {
   'use strict';
 
-  if (changeMaterial)
-    changeMaterials();
+  if (changeMaterial) changeMaterials();
 
   let delta = clock.getDelta();
 
