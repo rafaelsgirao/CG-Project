@@ -67,13 +67,10 @@ function createScene() {
 function createCameras() {
   'use strict';
   perspectiveCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight); //default near and far
-
-  //TODO: remove later. noclip cheatcode
-  const controls = new OrbitControls(perspectiveCamera, renderer.domElement);
-  controls.update();
   perspectiveCamera.position.set(50, 110, 120);
   perspectiveCamera.lookAt(scene.position);
-  // TODO - implement stero camera for vr
+
+  stereoCamera = new THREE.StereoCamera();
 }
 
 /////////////////////
@@ -102,7 +99,7 @@ function createLights() {
 }
 
 function createSolidSpotLight(parent) {
-  const spotLight = new THREE.SpotLight(0xffffff, 1);
+  const spotLight = new THREE.SpotLight(0xffffff, 10);
   spotLight.target.position.x = spotLight.position.x;
   spotLight.target.position.y = spotLight.position.y + 1;
   spotLight.target.position.z = spotLight.position.z;
@@ -531,7 +528,13 @@ function update() {
 /////////////
 function render() {
   'use strict';
-  renderer.render(scene, perspectiveCamera);
+  if (renderer.xr.isPresenting) {
+    renderer.render(scene, stereoCamera.cameraL);
+    renderer.render(scene, stereoCamera.cameraR);
+  }
+  else {
+    renderer.render(scene, perspectiveCamera);
+  }
 }
 
 /////////////////////
@@ -541,7 +544,7 @@ function animate() {
   'use strict';
   update();
   render();
-  requestAnimationFrame(animate);
+  renderer.setAnimationLoop(animate);
 }
 
 ////////////////////////////////
@@ -555,6 +558,8 @@ function init() {
   });
 
   renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild( VRButton.createButton( renderer ) );
+  renderer.xr.enabled = true;
   document.body.appendChild(renderer.domElement);
 
   clock = new THREE.Clock();
