@@ -55,7 +55,6 @@ const l = 2;
 function createScene() {
   'use strict';
   scene = new THREE.Scene();
-  scene.add(new THREE.AxesHelper());
   scene.background = new THREE.Color(0xe3d8b7);
   createCarrossel();
   createSkydome();
@@ -242,7 +241,7 @@ function getParametricGeometry(i) {
   return new ParametricGeometry(f, 25, 25);
 }
 
-function createMaterials(color = null, texture = null, side = null,  mesh) {
+function createMaterials(mesh, color = null, texture = null, side = null, shininess = 100, specular = null) {
   const lambertMaterial = new THREE.MeshLambertMaterial({ color: color });
   if (texture) lambertMaterial.map = texture;
   if (side) lambertMaterial.side = side;
@@ -251,9 +250,12 @@ function createMaterials(color = null, texture = null, side = null,  mesh) {
   if (texture) toonMaterial.map = texture;
   if (side) toonMaterial.side = side;
 
-  const phongMaterial = new THREE.MeshPhongMaterial({ color: color });
+  const phongMaterial = new THREE.MeshPhongMaterial({ color: color});
   if (texture) phongMaterial.map = texture;
   if (side) phongMaterial.side = side;
+  if (shininess) phongMaterial.shininess = shininess;
+  if (specular) phongMaterial.specular = specular;
+  if (color) phongMaterial.specular = phongMaterial.color;
 
   const normalMaterial = new THREE.MeshNormalMaterial({});
   if (side) normalMaterial.side = side;
@@ -279,7 +281,7 @@ function createSkydome() {
 
   const mesh = new THREE.Mesh(geometry);
 
-  createMaterials(null, texture, THREE.BackSide, mesh);
+  createMaterials(mesh, null, texture, THREE.BackSide);
 
   objectMap.set('skydome', mesh);
   scene.add(mesh);
@@ -304,7 +306,7 @@ function createCylinder(parent, x, y, z) {
   const geometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight);
 
   const mesh = new THREE.Mesh(geometry);
-  createMaterials(0xff0000, null, null, mesh);
+  createMaterials(mesh, 0xff0000, null, null);
   mesh.position.set(x, y, z);
 
   parent.add(mesh);
@@ -317,7 +319,7 @@ function createRing(parent, x, y, z, outer, inner, c = 0x101010) {
 
   const mesh = new THREE.Mesh(geometry);
 
-  createMaterials(c, null, null, mesh);
+  createMaterials(mesh, c);
   mesh.userData.moveStep = y;
 
   for (let i = 0; i < 8; i++) {
@@ -337,7 +339,7 @@ function createParametricSolid(parent, heightOffset, centerOffset, idx, total) {
 
   const mesh = new THREE.Mesh(geometry);
 
-  createMaterials(colour, null, null, mesh);
+  createMaterials(mesh, colour);
   mesh.userData.rotDirection = (centerOffset*idx%2) * 2 -1;
 
   const angle = ((2 * Math.PI) / total) * idx;
@@ -395,7 +397,7 @@ function createMobiusStrip() {
   // Creating the Mobius strip (mesh)
   const mesh = new THREE.Mesh(geometry);
 
-  createMaterials(0xc0c0c0, null, THREE.DoubleSide, mesh);
+  createMaterials(mesh, 0xc0c0c0, null, THREE.DoubleSide);
 
   mesh.scale.set(50, 50, 50);
 
