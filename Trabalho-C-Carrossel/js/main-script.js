@@ -30,7 +30,8 @@ let skydomeRadius = 500;
 let directionalLight;
 let directionalHelper;
 
-let lights = new Array();
+let spotLights = new Array();
+let pointLights = new Array();
 let lightsHelpers = new Array();
 
 let enableHelpers = false;
@@ -108,7 +109,7 @@ function createSolidSpotLight(parent) {
 
   parent.add(spotLight);
   parent.add(helper);
-  lights.push(spotLight);
+  spotLights.push(spotLight);
   lightsHelpers.push(helper);
 }
 
@@ -124,7 +125,7 @@ const createMobiusStripLight = (parent, centerOffset, idx, total) => {
 
   scene.add(light);
   scene.add(helper);
-  lights.push(light);
+  pointLights.push(light);
   lightsHelpers.push(helper);
 };
 
@@ -512,7 +513,7 @@ function update() {
   //helpers - remove later
   if (enableHelpers) {
     lightsHelpers.forEach((helper) => {
-      helper.visible = lights.at(0).visible;
+      helper.visible = spotLights.at(0).visible;
     });
     directionalHelper.visible = directionalLight.visible;
   } else {
@@ -620,7 +621,14 @@ function onKeyUp(e) {
       break;
     case 's':
     case 'S':
-      lights.forEach((light) => {
+      spotLights.forEach((light) => {
+        light.visible = !light.visible;
+      });
+      break;
+
+    case 'p':  
+    case 'P':
+      pointLights.forEach((light) => {
         light.visible = !light.visible;
       });
       break;
