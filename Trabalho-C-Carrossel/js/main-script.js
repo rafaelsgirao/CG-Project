@@ -1,3 +1,5 @@
+'use strict';
+
 import * as THREE from 'three';
 import { ParametricGeometry } from 'three/addons/geometries/ParametricGeometry.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -49,7 +51,6 @@ const l = 2;
 /* CREATE SCENE(S) */
 /////////////////////
 function createScene() {
-  'use strict';
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xe3d8b7);
   createCarrossel();
@@ -61,7 +62,6 @@ function createScene() {
 /* CREATE CAMERA(S) */
 //////////////////////
 function createCameras() {
-  'use strict';
   perspectiveCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight); //default near and far
   perspectiveCamera.position.set(50, 110, 120);
   perspectiveCamera.lookAt(scene.position);
@@ -473,8 +473,6 @@ function changeMaterials() {
 /* UPDATE */
 ////////////
 function update() {
-  'use strict';
-
   if (changeMaterial) changeMaterials();
 
   let delta = clock.getDelta();
@@ -498,7 +496,6 @@ function update() {
 /* DISPLAY */
 /////////////
 function render() {
-  'use strict';
   if (renderer.xr.isPresenting) {
     renderer.render(scene, stereoCamera.cameraL);
     renderer.render(scene, stereoCamera.cameraR);
@@ -511,7 +508,6 @@ function render() {
 /* ANIMATION CYCLE */
 /////////////////////
 function animate() {
-  'use strict';
   update();
   render();
   renderer.setAnimationLoop(animate);
@@ -521,8 +517,6 @@ function animate() {
 /* INITIALIZE ANIMATION CYCLE */
 ////////////////////////////////
 function init() {
-  'use strict';
-
   renderer = new THREE.WebGLRenderer({
     antialias: true,
   });
@@ -547,7 +541,6 @@ function init() {
 /* RESIZE WINDOW CALLBACK */
 ////////////////////////////
 function onResize() {
-  'use strict';
   renderer.setSize(window.innerWidth, window.innerHeight);
   perspectiveCamera.aspect = window.innerWidth / window.innerHeight;
   perspectiveCamera.updateProjectionMatrix();
@@ -556,26 +549,12 @@ function onResize() {
 ///////////////////////
 /* KEY DOWN CALLBACK */
 ///////////////////////
-function onKeyDown(e) {
-  'use strict';
-  /*
-  switch (e.key) {
-    case '1':
-    case '2':
-    case '3':
-      const idx = parseInt(e.key) - 1;
-      if (!isMoveRing[idx])
-        isMoveRing[idx] = true;
-      break;
-  }
-  */
-}
+function onKeyDown(e) {}
 
 ///////////////////////
 /* KEY UP CALLBACK */
 ///////////////////////
 function onKeyUp(e) {
-  'use strict';
   switch (e.key) {
     case '1':
     case '2':
