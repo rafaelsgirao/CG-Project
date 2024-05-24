@@ -117,13 +117,13 @@ const createMobiusStripLight = (parent, centerOffset, idx, total) => {
 /////////////////////////////////
 
 function Ring3DGeometry(outer, inner, height) {
-  var shape = new THREE.Shape();
+  const shape = new THREE.Shape();
 
   // Create the outer ring
   shape.absarc(0, 0, outer, 0, Math.PI * 2, false);
 
   // Create the hole
-  var holePath = new THREE.Path();
+  const holePath = new THREE.Path();
   holePath.absarc(0, 0, inner, 0, Math.PI * 2, true);
   shape.holes.push(holePath);
 
@@ -134,7 +134,7 @@ function Ring3DGeometry(outer, inner, height) {
     curveSegments: 64,
   };
 
-  var geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
   geometry.rotateX(Math.PI * 0.5);
   geometry.translate(0, height / 2, 0);
   return geometry;
