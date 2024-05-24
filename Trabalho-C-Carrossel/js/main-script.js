@@ -502,8 +502,7 @@ function render() {
   if (renderer.xr.isPresenting) {
     renderer.render(scene, stereoCamera.cameraL);
     renderer.render(scene, stereoCamera.cameraR);
-  }
-  else {
+  } else {
     renderer.render(scene, perspectiveCamera);
   }
 }
@@ -529,7 +528,7 @@ function init() {
   });
 
   renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild( VRButton.createButton( renderer ) );
+  document.body.appendChild(VRButton.createButton(renderer));
   renderer.xr.enabled = true;
   document.body.appendChild(renderer.domElement);
 
@@ -596,7 +595,7 @@ function onKeyUp(e) {
       });
       break;
 
-    case 'p':  
+    case 'p':
     case 'P':
       pointLights.forEach((light) => {
         light.visible = !light.visible;
