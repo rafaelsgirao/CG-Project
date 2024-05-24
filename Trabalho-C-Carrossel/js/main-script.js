@@ -28,13 +28,8 @@ let cylinderHeight = 50,
 let skydomeRadius = 500;
 
 let directionalLight;
-let directionalHelper;
-
 let spotLights = new Array();
 let pointLights = new Array();
-let lightsHelpers = new Array();
-
-let enableHelpers = false;
 
 //materials
 const LAMBERT = 1;
@@ -84,19 +79,14 @@ function createLights() {
   directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
   directionalLight.position.set(30, 60, 0);
   directionalLight.target = scene;
-  directionalHelper = new THREE.DirectionalLightHelper(directionalLight); // just to help - remove later
 
   const mobiusStrip = objectMap.get('mobiusStrip');
 
-  console.log(mobiusStrip);
-
   for (let i = 0; i < 8; i++) {
-    //TODO: make these consts
     createMobiusStripLight(mobiusStrip, 50, i, 8);
   }
   scene.add(ambientLight);
   scene.add(directionalLight);
-  scene.add(directionalHelper);
 }
 
 function createSolidSpotLight(parent) {
@@ -105,12 +95,9 @@ function createSolidSpotLight(parent) {
   spotLight.target.position.y = spotLight.position.y + 1;
   spotLight.target.position.z = spotLight.position.z;
   spotLight.angle = Math.PI / 4;
-  const helper = new THREE.SpotLightHelper(spotLight);
 
   parent.add(spotLight);
-  parent.add(helper);
   spotLights.push(spotLight);
-  lightsHelpers.push(helper);
 }
 
 const createMobiusStripLight = (parent, centerOffset, idx, total) => {
@@ -121,12 +108,8 @@ const createMobiusStripLight = (parent, centerOffset, idx, total) => {
   const z = centerOffset * Math.sin(angle);
   light.position.set(x, 25, z);
 
-  const helper = new THREE.PointLightHelper(light, 5);
-
   scene.add(light);
-  scene.add(helper);
   pointLights.push(light);
-  lightsHelpers.push(helper);
 };
 
 /////////////////////////////////
@@ -509,19 +492,6 @@ function update() {
   for (let idx = 0; idx < objectMap.get('surfaces').length; idx++) {
     spinSurface(idx, delta);
   }
-
-  //helpers - remove later
-  if (enableHelpers) {
-    lightsHelpers.forEach((helper) => {
-      helper.visible = spotLights.at(0).visible;
-    });
-    directionalHelper.visible = directionalLight.visible;
-  } else {
-    lightsHelpers.forEach((helper) => {
-      helper.visible = false;
-    });
-    directionalHelper.visible = false;
-  }
 }
 
 /////////////
@@ -657,12 +627,6 @@ function onKeyUp(e) {
     case 'T':
       materialsOff = !materialsOff;
       changeMaterial = true;
-      break;
-
-    //disable helpers
-    case 'h':
-    case 'H':
-      enableHelpers = !enableHelpers;
       break;
   }
 }
